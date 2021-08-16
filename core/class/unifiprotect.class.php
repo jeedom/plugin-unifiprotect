@@ -191,6 +191,18 @@ class unifiprotect extends eqLogic {
 		self::pull();
 	}
 
+	public static function secondsToTime($ss) {
+		$s = $ss % 60;
+		$m = floor(($ss % 3600) / 60);
+		$h = floor(($ss % 86400) / 3600);
+		$d = floor(($ss) / 86400);
+
+		if ($d)
+			return sprintf("%d.%02d:%02d:%02d", $d, $h, $m, $s);
+		else
+			return sprintf("%02d:%02d:%02d", $h, $m, $s);
+	}
+
 	public static function pull() {
 		$eqLogics = self::byType('unifiprotect', true);
 		$controller = self::getController();
@@ -251,8 +263,11 @@ class unifiprotect extends eqLogic {
 					}
 					$value = $value[$key];
 				}
-				if ($cmd->getLogicalId() == 'nvr::lastSeen') {
+				if ($key == 'lastSeen') {
 					$value = date('Y-m-d H:i:s', $value / 1000);
+				}
+				if ($cmd->getLogicalId() == 'nvr::uptime') {
+					$value = self::secondsToTime($value / 1000);
 				}
 				$eqLogic->checkAndUpdateCmd($cmd, $value);
 			}
@@ -277,6 +292,13 @@ class unifiprotect extends eqLogic {
 			return true;
 		}
 		$this->import($device);
+	}
+
+	public function getImage() {
+		if (file_exists(__DIR__ . '/../config/devices/' .  $this->getConfiguration('type') . '.png')) {
+			return 'plugins/unifiprotect/core/config/devices/' .  $this->getConfiguration('type') . '.png';
+		}
+		return false;
 	}
 }
 

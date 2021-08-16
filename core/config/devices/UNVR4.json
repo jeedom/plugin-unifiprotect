@@ -9,6 +9,13 @@
         "isVisible": "1"
       },
       {
+        "name": "Uptime",
+        "type": "info",
+        "subType": "string",
+        "logicalId":"nvr::uptime",
+        "isVisible": "1"
+      },
+      {
         "name": "Vu Dernière Fois",
         "type": "info",
         "subType": "string",

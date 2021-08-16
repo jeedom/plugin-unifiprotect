@@ -43,7 +43,11 @@ $eqLogics = eqLogic::byType($plugin->getId());
 			foreach ($eqLogics as $eqLogic) {
 				$opacity = ($eqLogic->getIsEnable()) ? '' : 'disableCard';
 				echo '<div class="eqLogicDisplayCard cursor ' . $opacity . '" data-eqLogic_id="' . $eqLogic->getId() . '">';
-				echo '<img src="' . $plugin->getPathImgIcon() . '"/>';
+				if ($eqLogic->getImage() !== false) {
+					echo '<img src="' . $eqLogic->getImage() . '"/>';
+				} else {
+					echo '<img src="' . $plugin->getPathImgIcon() . '"/>';
+				}
 				echo '<br>';
 				echo '<span class="name">' . $eqLogic->getHumanName(true, true) . '</span>';
 				echo '</div>';
@@ -122,16 +126,51 @@ $eqLogics = eqLogic::byType($plugin->getId());
 									<label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="isVisible" checked />{{Visible}}</label>
 								</div>
 							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label">{{Type}}</label>
+								<div class="col-sm-6">
+									<select disabled class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="type">
+										<option value="">{{Inconnu}}</option>
+										<?php
+										foreach (unifiprotect::devicesParameters() as $key => $device) {
+											echo '<option value="' . $key . '">' . $device['name'] . '</option>';
+										}
+										?>
+									</select>
+								</div>
+							</div>
 						</div>
 
 						<!-- Partie droite de l'onglet "Équipement" -->
 						<!-- Affiche l'icône du plugin par défaut mais vous pouvez y afficher les informations de votre choix -->
 						<div class="col-lg-6">
 							<legend><i class="fas fa-info"></i> {{Informations}}</legend>
-							<div class="form-group">
-								<div class="text-center">
-									<img name="icon_visu" src="<?= $plugin->getPathImgIcon(); ?>" style="max-width:160px;" />
-								</div>
+							<div class="col-sm-6">
+								<form class="form-horizontal">
+									<fieldset>
+										<div class="form-group">
+											<label class="col-sm-4 control-label">{{Identifiant}}</label>
+											<div class="col-sm-6">
+												<span class="eqLogicAttr label label-info" style="font-size:1em;" data-l1key="logicalId"></span>
+											</div>
+										</div>
+										<div class="form-group">
+											<label class="col-sm-4 control-label">{{IP}}</label>
+											<div class="col-sm-6">
+												<span class="eqLogicAttr label label-info" style="font-size:1em;" data-l1key="configuration" data-l2key="ip"></span>
+											</div>
+										</div>
+										<div class="form-group">
+											<label class="col-sm-4 control-label">{{Firmware}}</label>
+											<div class="col-sm-6">
+												<span class="eqLogicAttr label label-info" style="font-size:1em;" data-l1key="configuration" data-l2key="firmware"></span>
+											</div>
+										</div>
+									</fieldset>
+								</form>
+								<center>
+									<img src="<?php echo $plugin->getPathImgIcon(); ?>" id="img_unifiProtectModel" style="height : 250px;margin-top : 60px" />
+								</center>
 							</div>
 						</div>
 					</fieldset>
