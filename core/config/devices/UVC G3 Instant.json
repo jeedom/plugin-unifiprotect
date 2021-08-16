@@ -1,0 +1,54 @@
+{
+    "name" : "UVC G3 Instant",
+    "commands": [
+      {
+        "name": "Connectée",
+        "type": "info",
+        "subType": "binary",
+        "logicalId":"isConnected",
+        "isVisible": "1"
+      },
+      {
+        "name": "Etat",
+        "type": "info",
+        "subType": "string",
+        "logicalId":"state",
+        "isVisible": "1"
+      },
+      {
+        "name": "Vu Dernière Fois",
+        "type": "info",
+        "subType": "string",
+        "logicalId":"lastSeen",
+        "isVisible": "1"
+      },
+      {
+        "name": "Firmware",
+        "type": "info",
+        "subType": "string",
+        "logicalId":"firmwareVersion",
+        "isVisible": "1"
+      },
+      {
+        "name": "Hardware revision",
+        "type": "info",
+        "subType": "string",
+        "logicalId":"hardwareRevision",
+        "isVisible": "1"
+      },
+      {
+        "name": "Dernier mouvement",
+        "type": "info",
+        "subType": "string",
+        "logicalId":"lastMotion",
+        "isVisible": "1"
+      },
+      {
+        "name": "Rafraichir",
+        "type": "action",
+        "subType": "other",
+        "logicalId":"refresh",
+        "isVisible": "1"
+      }
+    ]
+}

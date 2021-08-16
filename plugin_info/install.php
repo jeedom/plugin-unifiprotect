@@ -18,14 +18,27 @@
 
 require_once dirname(__FILE__) . '/../../../core/php/core.inc.php';
 
-function unifi_install() {
-	
+function unifiprotect_install() {
+    $cron = cron::byClassAndFunction('unifiprotect', 'pull');
+    if (!is_object($cron)) {
+        $cron = new cron();
+        $cron->setClass('unifiprotect');
+        $cron->setFunction('pull');
+        $cron->setDeamon(1);
+        $cron->setDeamonSleepTime(config::byKey('DeamonSleepTime', 'unifiprotect', 3, true));
+        $cron->setEnable(1);
+        $cron->setSchedule('* * * * *');
+        $cron->setTimeout(1440);
+        $cron->save();
+    }
 }
 
-function unifi_update() {
-	
+function unifiprotect_update() {
 }
 
-function unifi_remove() {
-
+function unifiprotect_remove() {
+    $cron = cron::byClassAndFunction('unifiprotect', 'pull');
+    if (is_object($cron)) {
+        $cron->remove();
+    }
 }

@@ -171,6 +171,23 @@ class unifiprotect extends eqLogic {
 			$eqLogic->setConfiguration('mac', $datas['nvr']['mac']);
 		}
 		$eqLogic->save();
+		foreach ($datas['cameras'] as $camera) {
+			$eqLogic = self::byLogicalId($camera['mac'], 'unifiprotect');
+			if (!is_object($eqLogic)) {
+				log::add('unifiprotect', 'info', "Create camera " . $camera['name'] . "(" . $camera['mac'] . ")(" . $camera['type'] . "):" . json_encode($camera));
+				$eqLogic = new unifiprotect();
+				$eqLogic->setName($camera['name']);
+				$eqLogic->setIsEnable(1);
+				$eqLogic->setIsVisible(1);
+				$eqLogic->setLogicalId($camera['mac']);
+				$eqLogic->setEqType_name('unifiprotect');
+				$eqLogic->setConfiguration('type', $camera['type']);
+				$eqLogic->setConfiguration('isCamera', true);
+				$eqLogic->setConfiguration('device_id', $camera['id']);
+				$eqLogic->setConfiguration('mac', $camera['mac']);
+			}
+			$eqLogic->save();
+		}
 		self::pull();
 	}
 
@@ -183,14 +200,27 @@ class unifiprotect extends eqLogic {
 			}
 			throw new Exception(__('Impossible de se connecter sur Unifi protect', __FILE__));
 		}
-		$datas = $controller->get_server_info();
-		if (!is_array($datas) || !isset($datas['nvr'])) {
+		$server_info = $controller->get_server_info();
+		if (!is_array($server_info) || !isset($server_info['nvr'])) {
 			foreach ($eqLogics as $eqLogic) {
 				$eqLogic->checkAndUpdateCmd('state', 0);
 			}
-			throw new Exception(__('Erreur sur la recuperation des informations de Unifi Protect', __FILE__) . ' => ' . json_encode($datas));
+			throw new Exception(__('Erreur sur la recuperation des informations de Unifi Protect', __FILE__) . ' => ' . json_encode($server_info));
 		}
 		foreach ($eqLogics as $eqLogic) {
+			$datas = null;
+			if ($eqLogic->getConfiguration('isCamera', false)) {
+				foreach ($server_info['cameras'] as $camera) {
+					if ($camera['mac'] == $eqLogic->getLogicalId()) {
+						$datas = $camera;
+					}
+				}
+			} else {
+				$datas = $server_info;
+			}
+			if ($datas == null) {
+				continue;
+			}
 			foreach ($eqLogic->getCmd('info') as $cmd) {
 				if ($eqLogic->getConfiguration('isNVR', false)) {
 					if ($cmd->getLogicalId() == 'state') {
