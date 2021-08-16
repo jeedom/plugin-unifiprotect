@@ -4,7 +4,7 @@
       {
         "name": "Etat",
         "type": "info",
-        "subType": "string",
+        "subType": "binary",
         "logicalId":"state",
         "isVisible": "1"
       },
@@ -82,7 +82,8 @@
         "type": "info",
         "subType": "numeric",
         "logicalId":"tmpfs_used",
-        "isVisible": "1"
+        "isVisible": "1",
+        "unite" : "%"
       },
       {
         "name": "Utilisation disque",
