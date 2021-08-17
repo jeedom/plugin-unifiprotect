@@ -19,7 +19,6 @@ $('.eqLogicAttr[data-l1key=configuration][data-l2key=type]').on('change',functio
   $('#img_unifiProtectModel').attr('src','plugins/unifiprotect/core/config/devices/'+encodeURI($(this).value())+'.png');
 });
 
-
 /* Permet la réorganisation des commandes dans l'équipement */
 $("#table_cmd").sortable({
   axis: "y",
