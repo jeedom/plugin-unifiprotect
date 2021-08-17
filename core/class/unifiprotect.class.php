@@ -24,6 +24,11 @@ class unifiprotect extends eqLogic {
 	private static $_unifiprotectController = null;
 	public static $_encryptConfigKey = array('controller_ip', 'controller_user', 'controller_password');
 
+	public static function cronDaily() {
+		self::deamon_start();
+		self::sync();
+	}
+
 	public static function deamon_info() {
 		$return = array();
 		$return['log'] = '';
@@ -42,10 +47,10 @@ class unifiprotect extends eqLogic {
 		if (!is_object($cron)) {
 			$cron = new cron();
 		}
-		$cron->setClass('unifi');
+		$cron->setClass('unifiprotect');
 		$cron->setFunction('pull');
 		$cron->setDeamon(1);
-		$cron->setDeamonSleepTime(config::byKey('DeamonSleepTime', 'unifi', 3, true));
+		$cron->setDeamonSleepTime(config::byKey('DeamonSleepTime', 'unifiprotect', 3, true));
 		$cron->setEnable(1);
 		$cron->setSchedule('* * * * *');
 		$cron->setTimeout(1440);
