@@ -23,17 +23,10 @@
         "isVisible": "1"
       },
       {
-        "name": "Firmware",
+        "name": "Enregistre",
         "type": "info",
-        "subType": "string",
-        "logicalId":"firmwareVersion",
-        "isVisible": "1"
-      },
-      {
-        "name": "Hardware revision",
-        "type": "info",
-        "subType": "string",
-        "logicalId":"hardwareRevision",
+        "subType": "binary",
+        "logicalId":"isRecording",
         "isVisible": "1"
       },
       {

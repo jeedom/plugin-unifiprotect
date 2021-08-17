@@ -23,20 +23,6 @@
         "isVisible": "1"
       },
       {
-        "name": "Version",
-        "type": "info",
-        "subType": "string",
-        "logicalId":"nvr::version",
-        "isVisible": "1"
-      },
-      {
-        "name": "Firmware",
-        "type": "info",
-        "subType": "string",
-        "logicalId":"nvr::firmwareVersion",
-        "isVisible": "1"
-      },
-      {
         "name": "SSH actif",
         "type": "info",
         "subType": "binary",

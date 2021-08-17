@@ -21,7 +21,6 @@ require_once dirname(__FILE__) . '/../../3rdparty/unifiprotectapi.class.php';
 
 class unifiprotect extends eqLogic {
 	/***************************Attributs*******************************/
-	private static $_eqLogics = null;
 	private static $_unifiprotectController = null;
 	public static $_encryptConfigKey = array('controller_ip', 'controller_user', 'controller_password');
 
@@ -39,7 +38,6 @@ class unifiprotect extends eqLogic {
 
 	public static function deamon_start() {
 		self::deamon_stop();
-		self::$_eqLogics = null;
 		$cron = cron::byClassAndFunction('unifiprotect', 'pull');
 		if (!is_object($cron)) {
 			$cron = new cron();
@@ -155,37 +153,43 @@ class unifiprotect extends eqLogic {
 		if (!is_array($datas) || !isset($datas['nvr'])) {
 			throw new Exception(__('Erreur sur la recuperation des informations de Unifi Protect', __FILE__) . ' => ' . json_encode($datas));
 		}
+		log::add('unifiprotect', 'info', "Find NVR " . $datas['nvr']['name'] . "(" . $datas['nvr']['mac'] . ")(" . $datas['nvr']['type'] . "):" . json_encode($datas['nvr']));
 		$eqLogic = self::byLogicalId($datas['nvr']['mac'], 'unifiprotect');
 		if (!is_object($eqLogic)) {
-			log::add('unifiprotect', 'info', "Create NVR " . $datas['nvr']['name'] . "(" . $datas['nvr']['mac'] . ")(" . $datas['nvr']['type'] . "):" . json_encode($datas['nvr']));
 			$eqLogic = new unifiprotect();
 			$eqLogic->setName($datas['nvr']['name']);
 			$eqLogic->setIsEnable(1);
 			$eqLogic->setIsVisible(1);
 			$eqLogic->setLogicalId($datas['nvr']['mac']);
 			$eqLogic->setEqType_name('unifiprotect');
-			$eqLogic->setConfiguration('type', $datas['nvr']['type']);
-			$eqLogic->setConfiguration('isNVR', true);
-			$eqLogic->setConfiguration('serial', $datas['nvr']['hardwareId']);
-			$eqLogic->setConfiguration('device_id', $datas['nvr']['id']);
-			$eqLogic->setConfiguration('mac', $datas['nvr']['mac']);
 		}
+		$eqLogic->setConfiguration('type', $datas['nvr']['type']);
+		$eqLogic->setConfiguration('isNVR', true);
+		$eqLogic->setConfiguration('serial', $datas['nvr']['hardwareId']);
+		$eqLogic->setConfiguration('device_id', $datas['nvr']['id']);
+		$eqLogic->setConfiguration('mac', $datas['nvr']['mac']);
+		$eqLogic->setConfiguration('ip', $datas['nvr']['host']);
+		$eqLogic->setConfiguration('hardware', $datas['nvr']['version']);
+		$eqLogic->setConfiguration('firmware', $datas['nvr']['firmwareVersion']);
 		$eqLogic->save();
 		foreach ($datas['cameras'] as $camera) {
+			log::add('unifiprotect', 'info', "Find camera " . $camera['name'] . "(" . $camera['mac'] . ")(" . $camera['type'] . "):" . json_encode($camera));
 			$eqLogic = self::byLogicalId($camera['mac'], 'unifiprotect');
 			if (!is_object($eqLogic)) {
-				log::add('unifiprotect', 'info', "Create camera " . $camera['name'] . "(" . $camera['mac'] . ")(" . $camera['type'] . "):" . json_encode($camera));
 				$eqLogic = new unifiprotect();
 				$eqLogic->setName($camera['name']);
 				$eqLogic->setIsEnable(1);
 				$eqLogic->setIsVisible(1);
 				$eqLogic->setLogicalId($camera['mac']);
 				$eqLogic->setEqType_name('unifiprotect');
-				$eqLogic->setConfiguration('type', $camera['type']);
-				$eqLogic->setConfiguration('isCamera', true);
-				$eqLogic->setConfiguration('device_id', $camera['id']);
-				$eqLogic->setConfiguration('mac', $camera['mac']);
 			}
+			$eqLogic->setConfiguration('type', $camera['type']);
+			$eqLogic->setConfiguration('isCamera', true);
+			$eqLogic->setConfiguration('device_id', $camera['id']);
+			$eqLogic->setConfiguration('mac', $camera['mac']);
+			$eqLogic->setConfiguration('ip', $camera['host']);
+			$eqLogic->setConfiguration('hardware', $camera['hardwareRevision']);
+			$eqLogic->setConfiguration('firmware', $camera['firmwareVersion']);
 			$eqLogic->save();
 		}
 		self::pull();

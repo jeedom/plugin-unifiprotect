@@ -149,21 +149,23 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								<form class="form-horizontal">
 									<fieldset>
 										<div class="form-group">
-											<label class="col-sm-4 control-label">{{Identifiant}}</label>
-											<div class="col-sm-6">
-												<span class="eqLogicAttr label label-info" style="font-size:1em;" data-l1key="logicalId"></span>
+											<label class="col-sm-3 control-label">{{IP}}</label>
+											<div class="col-sm-3">
+												<span class="eqLogicAttr label label-default" data-l1key="configuration" data-l2key="ip"></span>
+											</div>
+											<label class="col-sm-3 control-label">{{Device ID}}</label>
+											<div class="col-sm-3">
+												<span class="eqLogicAttr label label-default" data-l1key="configuration" data-l2key="device_id"></span>
 											</div>
 										</div>
 										<div class="form-group">
-											<label class="col-sm-4 control-label">{{IP}}</label>
-											<div class="col-sm-6">
-												<span class="eqLogicAttr label label-info" style="font-size:1em;" data-l1key="configuration" data-l2key="ip"></span>
+											<label class="col-sm-3 control-label">{{Firmware}}</label>
+											<div class="col-sm-3">
+												<span class="eqLogicAttr label label-default" data-l1key="configuration" data-l2key="firmware"></span>
 											</div>
-										</div>
-										<div class="form-group">
-											<label class="col-sm-4 control-label">{{Firmware}}</label>
-											<div class="col-sm-6">
-												<span class="eqLogicAttr label label-info" style="font-size:1em;" data-l1key="configuration" data-l2key="firmware"></span>
+											<label class="col-sm-3 control-label">{{Hardware/Version}}</label>
+											<div class="col-sm-3">
+												<span class="eqLogicAttr label label-default" data-l1key="configuration" data-l2key="hardware"></span>
 											</div>
 										</div>
 									</fieldset>
@@ -189,6 +191,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								<th>{{Id}}</th>
 								<th>{{Nom}}</th>
 								<th>{{Type}}</th>
+								<th>{{Logical ID}}</th>
 								<th>{{Paramètres}}</th>
 								<th>{{Options}}</th>
 								<th>{{Action}}</th>
