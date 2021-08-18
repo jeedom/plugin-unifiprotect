@@ -268,6 +268,10 @@ class unifiprotectapi {
         return $this->fetch_results('/bootstrap');
     }
 
+    public function get_raw_events($_start, $_end) {
+        return $this->fetch_results('/events?start=' . $_start . '&end=' . $_end);
+    }
+
 
     /****************************************************************
      * setter/getter functions from here:
