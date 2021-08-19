@@ -65,6 +65,12 @@ if (!isConnect()) {
 				<input class="configKey form-control" data-l1key="DeamonSleepTime" placeholder="3" />{{secondes}}
 			</div>
 		</div>
+		<div class="form-group">
+			<label class="col-lg-4 control-label">{{Ne pas récuperer les évenements}}</label>
+			<div class="col-sm-3">
+				<input type="checkbox" class="configKey" data-l1key="dontGetEvent" />
+			</div>
+		</div>
 	</fieldset>
 </form>
 
