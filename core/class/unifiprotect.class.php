@@ -281,6 +281,46 @@ class unifiprotect extends eqLogic {
 				$eqLogic->checkAndUpdateCmd($cmd, $value);
 			}
 		}
+		$raw_events = $controller->get_raw_events(strtotime('now ' . (2 * config::byKey('DeamonSleepTime', 'unifiprotect', 3, true)) . ' seconds') * 1000, strtotime('now +10min') * 1000);
+		$events = array();
+		foreach ($raw_events as $raw_event) {
+			if (!isset($raw_event['camera']) || $raw_event['camera'] == '') {
+				continue;
+			}
+			if (!isset($raw_event['start']) || $raw_event['start'] == '') {
+				continue;
+			}
+			if (!isset($events[$raw_event['camera']])) {
+				$events[$raw_event['camera']] = $raw_event;
+			} elseif ($events[$raw_event['camera']]['start'] < $raw_event['start']) {
+				$events[$raw_event['camera']] = $raw_event;
+			}
+		}
+		foreach ($events as &$event) {
+			if ($event['type'] == 'smartDetectZone' && isset($event['smartDetectTypes']) && isset($event['smartDetectTypes'][0])) {
+				$event['type'] = $event['smartDetectTypes'][0];
+			}
+		}
+		foreach ($eqLogics as $eqLogic) {
+			if (!$eqLogic->getConfiguration('isCamera', false)) {
+				continue;
+			}
+			if (!isset($events[$eqLogic->getConfiguration('device_id')])) {
+				continue;
+			}
+			$event = $events[$eqLogic->getConfiguration('device_id')];
+			if ($eqLogic->getCache('event::lastId') == $event['id']) {
+				continue;
+			}
+			$eqLogic->checkAndUpdateCmd('event::lastDate', date('Y-m-d H:i:s', $event['start'] / 1000));
+			$eqLogic->checkAndUpdateCmd('event::last', $event['type']);
+			if (isset($event['score'])) {
+				$eqLogic->checkAndUpdateCmd('event::lastScore', $event['score']);
+			} else {
+				$eqLogic->checkAndUpdateCmd('event::lastScore', '');
+			}
+			$eqLogic->setCache('event::lastId', $event['id']);
+		}
 	}
 
 

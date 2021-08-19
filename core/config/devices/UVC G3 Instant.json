@@ -42,6 +42,36 @@
         "subType": "other",
         "logicalId":"refresh",
         "isVisible": "1"
+      },
+      {
+        "name": "Derniere évènement",
+        "type": "info",
+        "subType": "string",
+        "logicalId":"event::last",
+        "isVisible": "1",
+        "configuration": {
+          "repeatEventManagement": "always"
+        }
+      },
+      {
+        "name": "Derniere date évènement",
+        "type": "info",
+        "subType": "string",
+        "logicalId":"event::lastDate",
+        "isVisible": "1",
+        "configuration": {
+          "repeatEventManagement": "always"
+        }
+      },
+      {
+        "name": "Derniere score évènement",
+        "type": "info",
+        "subType": "string",
+        "logicalId":"event::lastScore",
+        "isVisible": "1",
+        "configuration": {
+          "repeatEventManagement": "always"
+        }
       }
     ]
 }
