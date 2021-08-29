@@ -325,6 +325,15 @@ class unifiprotect extends eqLogic {
 		}
 	}
 
+	public function get_snapshot($_eqLogic) {
+		if ($_eqLogic->getEqType_name() == 'camera') {
+			return self::getController()->get_snapshot($_eqLogic->getConfiguration('ip'));
+		}
+		return self::getController()->get_snapshot($_eqLogic->getConfiguration('device_id'));
+	}
+
+
+	/***********************Methode d'instance**************************/
 
 	public function postSave() {
 		if ($this->getConfiguration('applyType') != $this->getConfiguration('type')) {

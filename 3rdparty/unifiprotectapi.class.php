@@ -272,6 +272,10 @@ class unifiprotectapi {
         return $this->fetch_results('/events?start=' . $_start . '&end=' . $_end);
     }
 
+    public function get_snapshot($_camera_id) {
+        return $this->fetch_results('/cameras/' . $_camera_id . '/snapshot?force=true');
+    }
+
 
     /****************************************************************
      * setter/getter functions from here:
@@ -526,9 +530,12 @@ class unifiprotectapi {
         }
 
         $this->last_results_raw = $this->exec_curl($path, $payload);
+        //var_dump($this->last_results_raw);
         if (is_string($this->last_results_raw)) {
             $response = json_decode($this->last_results_raw, true);
-            $this->catch_json_last_error();
+            if (!is_array($response)) {
+                return $this->last_results_raw;
+            }
             return $response;
         }
         return false;
