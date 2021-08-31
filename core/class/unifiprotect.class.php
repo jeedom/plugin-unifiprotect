@@ -196,6 +196,27 @@ class unifiprotect extends eqLogic {
 			$eqLogic->setConfiguration('hardware', $camera['hardwareRevision']);
 			$eqLogic->setConfiguration('firmware', $camera['firmwareVersion']);
 			$eqLogic->save();
+			if (class_exists('camera')) {
+				$camera_jeedom = eqLogic::byLogicalId($camera['id'], 'camera');
+				if (!is_object($camera_jeedom)) {
+					$camera_jeedom = new camera();
+					$camera_jeedom->setIsEnable(1);
+					$camera_jeedom->setIsVisible(1);
+					$camera_jeedom->setName($camera['name']);
+				}
+				$type = $camera['type'];
+				if ($type == 'UVC G4 Bullet') {
+					$type = 'g4_bullet';
+				}
+				$camera_jeedom->setConfiguration('device', 'ubiquiti.' . $type);
+				$camera_jeedom->setConfiguration('ip', $camera['id']);
+				$camera_jeedom->setConfiguration('urlStream', 'unifiprotect::get_snapshot');
+				$camera_jeedom->setEqType_name('camera');
+				$camera_jeedom->setLogicalId($camera['id']);
+				$camera_jeedom->save();
+				$camera_jeedom->setConfiguration('urlStream', 'unifiprotect::get_snapshot');
+				$camera_jeedom->save(true);
+			}
 		}
 		self::pull();
 	}
