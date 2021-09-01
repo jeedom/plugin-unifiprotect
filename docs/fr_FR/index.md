@@ -17,7 +17,7 @@ Vous pouvez trouver [ici](https://compatibility.jeedom.com/index.php?v=d&p=home&
 Après installation du plugin, il vous suffit de l'activer. Quelques paramètres sont à renseigner dans la configuration du plugin :
 
 -   **Controleur Unifi protect** : Il faut mettre le chemin vers votre controleur Unifi (juste l'ip dans la pluspart des cas)
--   **Utilisateur Unifi protect** : Indiquer ici un nom d'utilisateur local (admin) 
+-   **Utilisateur Unifi protect** : Indiquer ici un nom d'utilisateur local (l'utilisateur peut etre "Limeted Admin" avec "View only" sur Unifi Protect) 
 -   **Mot de passe Unifi protect** : Mettre ici le mot de passe de l'utilisateur
 -   **Fréquence de rafraîchissement** : Fréquence des demandes d'information au controleur (plus c'est bas plus ca consommera des ressources sur celui-ci, attention pour ceux étant sur UDM-Pro)
 -   **Ne pas récuperer les évenements** : Ne pas recuperer les évenements des cameras (permet de consommer moins de ressources mais vous perdez la remontée des detection de mouvement/personne/voiture/...)
