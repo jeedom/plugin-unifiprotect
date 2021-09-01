@@ -1,6 +1,6 @@
 # Plugin Unifi Protect
 
-# Description
+## Description
 
 Plugin permettant de connecter Jeedom à Unifi Protect
 
@@ -8,7 +8,11 @@ Plugin permettant de connecter Jeedom à Unifi Protect
 >
 >Il n'y a aucune API officiel pour Unifi protect le plugin peut donc cesser de fonctionner du jour au lendemain suite à une mise à jour d'Unifi protect. En aucun cas Jeedom ne pourra etre tenu responsable et/ou aura le devoir de corriger
 
-# Configuration du plugin
+## Compatibilité
+
+Vous pouvez trouver [ici](https://compatibility.jeedom.com/index.php?v=d&p=home&plugin=unifiprotect) la liste des modules compatible avec le plugin
+
+## Configuration du plugin
 
 Après installation du plugin, il vous suffit de l'activer. Quelques paramètres sont à renseigner dans la configuration du plugin :
 
@@ -23,9 +27,9 @@ Après installation du plugin, il vous suffit de l'activer. Quelques paramètres
 >
 >Si vous avez le plugin camera d'installé le plugin Unifi Protect va automatiquement créer les caméras dans le plugin caméra 
 
-# Remontée d'information
+## Remontée d'information
 
-## Controleur
+### Controleur
 
 - Etat
 - Uptime
@@ -38,7 +42,7 @@ Après installation du plugin, il vous suffit de l'activer. Quelques paramètres
 - Utilisation tmpfs
 - Utilisation disque
 
-## Camera 
+### Camera 
 
 - Connectée
 - Etat
