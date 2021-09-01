@@ -1,7 +1,7 @@
 {
 	"id" : "unifiprotect",
 	"name" : "Ubiquiti Unifi protect",
-	"description" : "Ubiquiti Unifi protect",
+	"description" : "Plugin permettant de connecter Jeedom à Unifi Protect",
 	"licence" : "AGPL",
 	"author" : "Jeedom SAS",
 	"hasDependency" : false,
@@ -9,5 +9,5 @@
 	"require" : "3.3.24",
 	"category" : "monitoring",
 	"languages" : ["fr_FR","en_US"],
-	"compatibility" : ["miniplus","smart","rpi","docker","diy","v4"]
+	"compatibility" : ["miniplus","smart","rpi","docker","diy","v4","atlas"]
 }
