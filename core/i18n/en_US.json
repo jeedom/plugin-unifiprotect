@@ -1,0 +1,79 @@
+{
+    "plugins\/unifiprotect\/plugin_info\/configuration.php": {
+        "Unifi": "Unifi",
+        "Controleur Unifi protect": "Unifi protect controller",
+        "IP du controleur": "Controller IP",
+        "Utilisateur Unifi protect": "Unifi protect user",
+        "Utilisateur": "User",
+        "Mot de passe Unifi protect": "Unifi protect password",
+        "Mot de passe": "Password",
+        "Découverte": "Discovery",
+        "Rechercher les équipements Unifi protect": "Find Unifi protect equipment",
+        "Paramètres": "Settings",
+        "Fréquence de rafraîchissement": "Refresh rate",
+        "secondes": "seconds",
+        "Ne pas récuperer les évenements": "Do not collect events",
+        "Synchronisation réussie": "Synchronization successful"
+    },
+    "plugins\/unifiprotect\/desktop\/php\/unifiprotect.php": {
+        "401 - Accès non autorisé": "401 - Unauthorized Access",
+        "Gestion": "Management",
+        "Ajouter": "Add",
+        "Configuration": "Configuration",
+        "Mes templates": "My templates",
+        "Aucun équipement Template n\\'est paramétré, cliquer sur \"Ajouter\" pour commencer": "No Template equipment is configured, click on \"Add\" to start",
+        "Rechercher": "To research",
+        "Configuration avancée": "Advanced configuration",
+        "Dupliquer": "Duplicate",
+        "Sauvegarder": "To safeguard",
+        "Supprimer": "To delete",
+        "Equipement": "Equipment",
+        "Commandes": "Orders",
+        "Paramètres généraux": "General settings",
+        "Nom de l'équipement": "Equipment name",
+        "Objet parent": "Parent object",
+        "Aucun": "No",
+        "Catégorie": "Category",
+        "Options": "Options",
+        "Activer": "Activate",
+        "Visible": "Visible",
+        "Type": "Type",
+        "Inconnu": "Unknown",
+        "Informations": "Information",
+        "IP": "IP",
+        "Device ID": "Device ID",
+        "Firmware": "Firmware",
+        "Hardware\/Version": "Hardware \/ Version",
+        "Ajouter une commande": "Add an order",
+        "Id": "Id",
+        "Nom": "Name",
+        "Logical ID": "Logical ID",
+        "Paramètres": "Settings",
+        "Action": "Action"
+    },
+    "plugins\/unifiprotect\/desktop\/js\/unifiprotect.js": {
+        "Nom de la commande": "Order name",
+        "Commande information liée": "Command related information",
+        "Aucune": "None",
+        "Icône": "Icon",
+        "Min.": "Min.",
+        "Max.": "Max.",
+        "Unité": "Unity",
+        "Afficher": "Display",
+        "Historiser": "Historize",
+        "Inverser": "Reverse"
+    },
+    "plugins\/unifiprotect\/core\/ajax\/unifiprotect.ajax.php": {
+        "401 - Accès non autorisé": "401 - Unauthorized Access",
+        "Aucune méthode correspondante à : ": "No method corresponding to:"
+    },
+    "plugins\/unifiprotect\/core\/class\/unifiprotect.class.php": {
+        "Veuillez vérifier la configuration": "Please check the configuration",
+        "Tache cron introuvable": "Cron job not found",
+        "Impossible de se connecter sur Unifi protect": "Unable to connect to Unifi protect",
+        "Erreur sur la recuperation des informations de Unifi Protect": "Error retrieving information from Unifi Protect"
+    },
+    "info.json": {
+        "Plugin permettant de connecter Jeedom à Unifi Protect": "Plugin to connect Jeedom to Unifi Protect"
+    }
+}

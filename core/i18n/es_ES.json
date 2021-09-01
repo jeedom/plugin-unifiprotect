@@ -1,0 +1,79 @@
+{
+    "plugins\/unifiprotect\/plugin_info\/configuration.php": {
+        "Unifi": "Unifi",
+        "Controleur Unifi protect": "Controlador de protección Unifi",
+        "IP du controleur": "IP del controlador",
+        "Utilisateur Unifi protect": "Unifi proteger al usuario",
+        "Utilisateur": "Usuario",
+        "Mot de passe Unifi protect": "Unifi proteger contraseña",
+        "Mot de passe": "Contraseña",
+        "Découverte": "Descubrimiento",
+        "Rechercher les équipements Unifi protect": "Encuentra equipos de protección Unifi",
+        "Paramètres": "Configuraciones",
+        "Fréquence de rafraîchissement": "Frecuencia de actualización",
+        "secondes": "segundos",
+        "Ne pas récuperer les évenements": "No recopile eventos",
+        "Synchronisation réussie": "Sincronización exitosa"
+    },
+    "plugins\/unifiprotect\/desktop\/php\/unifiprotect.php": {
+        "401 - Accès non autorisé": "401 - Acceso no autorizado",
+        "Gestion": "Gestión",
+        "Ajouter": "Agregar",
+        "Configuration": "Configuración",
+        "Mes templates": "Mis plantillas",
+        "Aucun équipement Template n\\'est paramétré, cliquer sur \"Ajouter\" pour commencer": "No hay ningún equipo de plantilla configurado, haga clic en \"Agregar\" para comenzar",
+        "Rechercher": "Buscar",
+        "Configuration avancée": "Configuración avanzada",
+        "Dupliquer": "Duplicar",
+        "Sauvegarder": "Para salvaguardar",
+        "Supprimer": "Borrar",
+        "Equipement": "Equipo",
+        "Commandes": "Pedidos",
+        "Paramètres généraux": "Configuración general",
+        "Nom de l'équipement": "Nombre del equipo",
+        "Objet parent": "Objeto padre",
+        "Aucun": "No",
+        "Catégorie": "Categoría",
+        "Options": "Opciones",
+        "Activer": "Activar",
+        "Visible": "Visible",
+        "Type": "Escribe",
+        "Inconnu": "Desconocido",
+        "Informations": "Información",
+        "IP": "IP",
+        "Device ID": "ID del dispositivo",
+        "Firmware": "Firmware",
+        "Hardware\/Version": "Versión del hardware",
+        "Ajouter une commande": "Agregar un pedido",
+        "Id": "Identificación",
+        "Nom": "Apellido",
+        "Logical ID": "ID lógica",
+        "Paramètres": "Configuraciones",
+        "Action": "Acción"
+    },
+    "plugins\/unifiprotect\/desktop\/js\/unifiprotect.js": {
+        "Nom de la commande": "Nombre de la orden",
+        "Commande information liée": "Información relacionada con el comando",
+        "Aucune": "Ninguno",
+        "Icône": "Icono",
+        "Min.": "Min.",
+        "Max.": "Max.",
+        "Unité": "Unidad",
+        "Afficher": "Monitor",
+        "Historiser": "Historizar",
+        "Inverser": "Marcha atrás"
+    },
+    "plugins\/unifiprotect\/core\/ajax\/unifiprotect.ajax.php": {
+        "401 - Accès non autorisé": "401 - Acceso no autorizado",
+        "Aucune méthode correspondante à : ": "Ningún método correspondiente a:"
+    },
+    "plugins\/unifiprotect\/core\/class\/unifiprotect.class.php": {
+        "Veuillez vérifier la configuration": "Por favor revise la configuración",
+        "Tache cron introuvable": "Trabajo cron no encontrado",
+        "Impossible de se connecter sur Unifi protect": "No se puede conectar a la protección Unifi",
+        "Erreur sur la recuperation des informations de Unifi Protect": "Error al recuperar información de Unifi Protect"
+    },
+    "info.json": {
+        "Plugin permettant de connecter Jeedom à Unifi Protect": "Complemento para conectar Jeedom a Unifi Protect"
+    }
+}
