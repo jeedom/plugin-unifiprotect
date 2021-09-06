@@ -296,6 +296,9 @@ class unifiprotect extends eqLogic {
 				if ($key == 'lastSeen') {
 					$value = date('Y-m-d H:i:s', $value / 1000);
 				}
+				if ($key == 'lastMotion') {
+					$value = date('Y-m-d H:i:s', $value / 1000);
+				}
 				if ($cmd->getLogicalId() == 'nvr::uptime') {
 					$value = self::secondsToTime($value / 1000);
 				}
@@ -303,7 +306,7 @@ class unifiprotect extends eqLogic {
 			}
 		}
 		if (!config::byKey('dontGetEvent', 'unifiprotect', false)) {
-			$raw_events = $controller->get_raw_events(strtotime('now ' . (2 * config::byKey('DeamonSleepTime', 'unifiprotect', 3, true)) . ' seconds') * 1000, strtotime('now +10min') * 1000);
+			$raw_events = $controller->get_raw_events(strtotime('now ' . (10 * config::byKey('DeamonSleepTime', 'unifiprotect', 3, true)) . ' seconds') * 1000, strtotime('now +10min') * 1000);
 			$events = array();
 			foreach ($raw_events as $raw_event) {
 				if (!isset($raw_event['camera']) || $raw_event['camera'] == '') {
@@ -330,18 +333,18 @@ class unifiprotect extends eqLogic {
 				if (!isset($events[$eqLogic->getConfiguration('device_id')])) {
 					continue;
 				}
-				$event = $events[$eqLogic->getConfiguration('device_id')];
-				if ($eqLogic->getCache('event::lastId') == $event['id']) {
+				$found_event = $events[$eqLogic->getConfiguration('device_id')];
+				if ($eqLogic->getCache('event::lastId') == $found_event['id']) {
 					continue;
 				}
-				$eqLogic->checkAndUpdateCmd('event::lastDate', date('Y-m-d H:i:s', $event['start'] / 1000));
-				$eqLogic->checkAndUpdateCmd('event::last', $event['type']);
-				if (isset($event['score'])) {
-					$eqLogic->checkAndUpdateCmd('event::lastScore', $event['score']);
+				$eqLogic->checkAndUpdateCmd('event::lastDate', date('Y-m-d H:i:s', $found_event['start'] / 1000));
+				$eqLogic->checkAndUpdateCmd('event::last', $found_event['type']);
+				if (isset($found_event['score'])) {
+					$eqLogic->checkAndUpdateCmd('event::lastScore', $found_event['score']);
 				} else {
 					$eqLogic->checkAndUpdateCmd('event::lastScore', '');
 				}
-				$eqLogic->setCache('event::lastId', $event['id']);
+				$eqLogic->setCache('event::lastId', $found_event['id']);
 			}
 		}
 	}
