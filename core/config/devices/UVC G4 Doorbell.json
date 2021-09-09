@@ -51,17 +51,19 @@
         "isVisible": "1"
       },
       {
-        "name": "Derniere évènement",
+        "name": "Evènement",
         "type": "info",
         "subType": "string",
         "logicalId":"event::last",
         "isVisible": "1",
         "configuration": {
-          "repeatEventManagement": "always"
+          "repeatEventManagement": "always",
+          "returnStateValue" : "Aucun",
+          "returnStateTime" : 1
         }
       },
       {
-        "name": "Derniere date évènement",
+        "name": "Date évènement",
         "type": "info",
         "subType": "string",
         "logicalId":"event::lastDate",
@@ -71,7 +73,7 @@
         }
       },
       {
-        "name": "Derniere score évènement",
+        "name": "Score évènement",
         "type": "info",
         "subType": "string",
         "logicalId":"event::lastScore",
