@@ -293,10 +293,7 @@ class unifiprotect extends eqLogic {
 					}
 					$value = $value[$key];
 				}
-				if ($key == 'lastSeen') {
-					$value = date('Y-m-d H:i:s', $value / 1000);
-				}
-				if ($key == 'lastMotion') {
+				if (in_array($key, array('lastSeen', 'lastMotion', 'lastRing'))) {
 					$value = date('Y-m-d H:i:s', $value / 1000);
 				}
 				if ($cmd->getLogicalId() == 'nvr::uptime') {
@@ -307,6 +304,7 @@ class unifiprotect extends eqLogic {
 		}
 		if (!config::byKey('dontGetEvent', 'unifiprotect', false)) {
 			$raw_events = $controller->get_raw_events(strtotime('now ' . (10 * config::byKey('DeamonSleepTime', 'unifiprotect', 3, true)) . ' seconds') * 1000, strtotime('now +10min') * 1000);
+			log::add('unifiprotect', 'debug', json_encode($raw_events));
 			$events = array();
 			foreach ($raw_events as $raw_event) {
 				if (!isset($raw_event['camera']) || $raw_event['camera'] == '') {
@@ -326,6 +324,7 @@ class unifiprotect extends eqLogic {
 					$event['type'] = $event['smartDetectTypes'][0];
 				}
 			}
+
 			foreach ($eqLogics as $eqLogic) {
 				if (!$eqLogic->getConfiguration('isCamera', false)) {
 					continue;

@@ -1,0 +1,84 @@
+{
+    "name" : "UVC G4 Doorbell",
+    "commands": [
+      {
+        "name": "Connectée",
+        "type": "info",
+        "subType": "binary",
+        "logicalId":"isConnected",
+        "isVisible": "1"
+      },
+      {
+        "name": "Etat",
+        "type": "info",
+        "subType": "string",
+        "logicalId":"state",
+        "isVisible": "1"
+      },
+      {
+        "name": "Vu Dernière Fois",
+        "type": "info",
+        "subType": "string",
+        "logicalId":"lastSeen",
+        "isVisible": "1"
+      },
+      {
+        "name": "Enregistre",
+        "type": "info",
+        "subType": "binary",
+        "logicalId":"isRecording",
+        "isVisible": "1"
+      },
+      {
+        "name": "Dernier mouvement",
+        "type": "info",
+        "subType": "string",
+        "logicalId":"lastMotion",
+        "isVisible": "1"
+      },
+      {
+        "name": "Derniere sonnette",
+        "type": "info",
+        "subType": "string",
+        "logicalId":"lastRing",
+        "isVisible": "1"
+      },
+      {
+        "name": "Rafraichir",
+        "type": "action",
+        "subType": "other",
+        "logicalId":"refresh",
+        "isVisible": "1"
+      },
+      {
+        "name": "Derniere évènement",
+        "type": "info",
+        "subType": "string",
+        "logicalId":"event::last",
+        "isVisible": "1",
+        "configuration": {
+          "repeatEventManagement": "always"
+        }
+      },
+      {
+        "name": "Derniere date évènement",
+        "type": "info",
+        "subType": "string",
+        "logicalId":"event::lastDate",
+        "isVisible": "1",
+        "configuration": {
+          "repeatEventManagement": "always"
+        }
+      },
+      {
+        "name": "Derniere score évènement",
+        "type": "info",
+        "subType": "string",
+        "logicalId":"event::lastScore",
+        "isVisible": "1",
+        "configuration": {
+          "repeatEventManagement": "always"
+        }
+      }
+    ]
+}
