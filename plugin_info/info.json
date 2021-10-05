@@ -7,7 +7,7 @@
 	"hasDependency" : false,
 	"hasOwnDeamon" : true,
 	"require" : "3.3.24",
-	"category" : "monitoring",
+	"category" : "security",
 	"languages" : ["fr_FR","en_US"],
 	"compatibility" : ["miniplus","smart","rpi","docker","diy","v4"]
 }
