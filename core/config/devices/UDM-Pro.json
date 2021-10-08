@@ -1,0 +1,94 @@
+{
+    "name" : "UDM PRO",
+    "commands": [
+      {
+        "name": "Etat",
+        "type": "info",
+        "subType": "binary",
+        "logicalId":"state",
+        "isVisible": "1"
+      },
+      {
+        "name": "Uptime",
+        "type": "info",
+        "subType": "string",
+        "logicalId":"nvr::uptime",
+        "isVisible": "1"
+      },
+      {
+        "name": "Vu Dernière Fois",
+        "type": "info",
+        "subType": "string",
+        "logicalId":"nvr::lastSeen",
+        "isVisible": "1"
+      },
+      {
+        "name": "SSH actif",
+        "type": "info",
+        "subType": "binary",
+        "logicalId":"nvr::isSshEnabled",
+        "isVisible": "1"
+      },
+      {
+        "name": "Erreur code",
+        "type": "info",
+        "subType": "string",
+        "logicalId":"nvr::errorCode",
+        "isVisible": "1"
+      },
+      {
+        "name": "Utilisation CPU",
+        "type": "info",
+        "subType": "numeric",
+        "logicalId":"nvr::systemInfo::cpu::averageLoad",
+        "isVisible": "1",
+        "isHistorized": "1",
+        "unite" : "%"
+      },
+      {
+        "name": "CPU température",
+        "type": "info",
+        "subType": "numeric",
+        "logicalId":"nvr::systemInfo::cpu::temperature",
+        "isVisible": "1",
+        "isHistorized": "1",
+        "unite" : "°C"
+      },
+      {
+        "name": "Utilisation mémoire",
+        "type": "info",
+        "subType": "numeric",
+        "logicalId":"memory_used",
+        "isVisible": "1",
+        "isHistorized": "1",
+        "unite" : "%"
+      },
+      {
+        "name": "Utilisation tmpfs",
+        "type": "info",
+        "subType": "numeric",
+        "logicalId":"tmpfs_used",
+        "isVisible": "1",
+        "unite" : "%"
+      },
+      {
+        "name": "Utilisation disque",
+        "type": "info",
+        "subType": "numeric",
+        "logicalId":"nvr::storageStats::utilization",
+        "isVisible": "1",
+        "unite" : "%",
+        "configuration":{
+          "historizeRound":"2"
+        }
+      },
+      {
+        "name": "Rafraichir",
+        "type": "action",
+        "subType": "other",
+        "logicalId":"refresh",
+        "isVisible": "1"
+      }
+    ]
+  }
+  
