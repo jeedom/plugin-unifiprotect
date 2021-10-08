@@ -1,5 +1,5 @@
 {
-    "name" : "UVC G3 Instant",
+    "name" : "UVC G4 Doorbell",
     "commands": [
       {
         "name": "Connectée",
@@ -34,6 +34,13 @@
         "type": "info",
         "subType": "string",
         "logicalId":"lastMotion",
+        "isVisible": "1"
+      },
+      {
+        "name": "Derniere sonnette",
+        "type": "info",
+        "subType": "string",
+        "logicalId":"lastRing",
         "isVisible": "1"
       },
       {
