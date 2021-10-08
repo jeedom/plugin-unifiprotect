@@ -153,6 +153,8 @@ $eqLogics = eqLogic::byType($plugin->getId());
 											<div class="col-sm-3">
 												<span class="eqLogicAttr label label-default" data-l1key="configuration" data-l2key="ip"></span>
 											</div>
+										</div>
+										<div class="form-group">
 											<label class="col-sm-3 control-label">{{Device ID}}</label>
 											<div class="col-sm-3">
 												<span class="eqLogicAttr label label-default" data-l1key="configuration" data-l2key="device_id"></span>
@@ -163,6 +165,8 @@ $eqLogics = eqLogic::byType($plugin->getId());
 											<div class="col-sm-3">
 												<span class="eqLogicAttr label label-default" data-l1key="configuration" data-l2key="firmware"></span>
 											</div>
+										</div>
+										<div class="form-group">
 											<label class="col-sm-3 control-label">{{Hardware/Version}}</label>
 											<div class="col-sm-3">
 												<span class="eqLogicAttr label label-default" data-l1key="configuration" data-l2key="hardware"></span>
