@@ -20,23 +20,27 @@ class unifiprotectapi {
     /**
      * private and protected properties
      */
-    private $class_version        = '1.1.70';
-    protected $baseurl            = 'https://127.0.0.1:443';
-    protected $user               = '';
-    protected $password           = '';
-    protected $debug              = false;
-    protected $ssl_verify_peer    = false;
-    protected $ssl_verify_host    = false;
-    protected $is_loggedin        = false;
-    protected $is_unifi_os        = false;
-    protected $exec_retries       = 0;
-    protected $cookies            = '';
-    protected $headers            = [];
-    protected $method             = 'GET';
-    protected $methods_allowed    = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
-    protected $connect_timeout    = 10;
-    protected $last_results_raw   = null;
-    protected $last_error_message = null;
+    const CLASS_VERSION = '1.1.75';
+    protected $baseurl              = 'https://127.0.0.1:443';
+    protected $user                 = '';
+    protected $password             = '';
+    protected $site                 = 'default';
+    protected $version              = '6.2.26';
+    protected $debug                = false;
+    protected $is_logged_in         = false;
+    protected $is_unifi_os          = false;
+    protected $exec_retries         = 0;
+    protected $cookies              = '';
+    protected $last_results_raw     = null;
+    protected $last_error_message   = null;
+    protected $curl_ssl_verify_peer = false;
+    protected $curl_ssl_verify_host = false;
+    protected $curl_http_version    = CURL_HTTP_VERSION_1_1;
+    protected $curl_headers         = [];
+    protected $curl_method          = 'GET';
+    protected $curl_methods_allowed = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
+    protected $curl_request_timeout = 30;
+    protected $curl_connect_timeout = 10;
 
     /**
      * Construct an instance of the UniFi API client class
@@ -52,7 +56,7 @@ class unifiprotectapi {
      *                            recommended for production environments to prevent potential MitM attacks, default value (false)
      *                            disables validation of the controller certificate
      */
-    public function __construct($user, $password, $baseurl = '', $ssl_verify = false) {
+    public function __construct($user, $password, $baseurl = '', $site = '', $version = '', $ssl_verify = false) {
         if (!extension_loaded('curl')) {
             trigger_error('The PHP curl extension is not loaded. Please correct this before proceeding!');
         }
@@ -65,9 +69,18 @@ class unifiprotectapi {
             $this->baseurl = trim($baseurl);
         }
 
+        if (!empty($site)) {
+            $this->check_site($site);
+            $this->site = trim($site);
+        }
+
+        if (!empty($version)) {
+            $this->version = trim($version);
+        }
+
         if ((bool) $ssl_verify === true) {
-            $this->ssl_verify_peer = true;
-            $this->ssl_verify_host = 2;
+            $this->curl_ssl_verify_peer = true;
+            $this->curl_ssl_verify_host = 2;
         }
     }
 
@@ -88,7 +101,7 @@ class unifiprotectapi {
         /**
          * logout, if needed
          */
-        if ($this->is_loggedin) {
+        if ($this->is_logged_in) {
             $this->logout();
         }
     }
@@ -102,21 +115,18 @@ class unifiprotectapi {
         /**
          * skip the login process if already logged in
          */
-        if ($this->is_loggedin === true) {
-            return true;
+        if ($this->update_unificookie()) {
+            $this->is_logged_in = true;
         }
 
-        if ($this->update_unificookie()) {
-            $this->is_loggedin = true;
-
+        if ($this->is_logged_in === true) {
             return true;
         }
 
         /**
-         * check whether this is a "regular" controller or one based on UniFi OS,
-         * prepare cURL and options
+         * prepare cURL and options to check whether this is a "regular" controller or one based on UniFi OS
          */
-        if (!($ch = $this->get_curl_resource())) {
+        if (!($ch = $this->get_curl_handle())) {
             return false;
         }
 
@@ -147,7 +157,7 @@ class unifiprotectapi {
             CURLOPT_POSTFIELDS => json_encode(['username' => $this->user, 'password' => $this->password]),
             CURLOPT_HTTPHEADER => [
                 'content-type: application/json',
-                'Expect:'
+                'Expect:',
             ],
             CURLOPT_REFERER    => $this->baseurl . '/login',
             CURLOPT_URL        => $this->baseurl . '/api/login',
@@ -193,12 +203,12 @@ class unifiprotectapi {
         }
 
         curl_close($ch);
-
         /**
-         * extract the cookies
+         * check the HTTP response code
          */
         if ($http_code >= 200 && $http_code < 400) {
-            return $this->is_loggedin;
+            $this->is_logged_in = true;
+            return $this->is_logged_in;
         }
 
         return false;
@@ -213,32 +223,31 @@ class unifiprotectapi {
         /**
          * prepare cURL and options
          */
-        if (!($ch = $this->get_curl_resource())) {
+        if (!($ch = $this->get_curl_handle())) {
             return false;
         }
 
         $curl_options = [
             CURLOPT_HEADER => true,
-            CURLOPT_POST   => true
+            CURLOPT_POST   => true,
         ];
 
         /**
-         * constuct HTTP request headers as required
+         * construct the HTTP request headers as required
          */
-        $this->headers = [
-            'content-length: 0',
-            'Expect:'
+        $this->curl_headers = [
+            'Expect:',
         ];
 
-        $logout_path   = '/logout';
+        $logout_path = '/logout';
         if ($this->is_unifi_os) {
-            $logout_path = '/api/auth/logout';
+            $logout_path                         = '/api/auth/logout';
             $curl_options[CURLOPT_CUSTOMREQUEST] = 'POST';
 
             $this->create_x_csrf_token_header();
         }
 
-        $curl_options[CURLOPT_HTTPHEADER] = $this->headers;
+        $curl_options[CURLOPT_HTTPHEADER] = $this->curl_headers;
         $curl_options[CURLOPT_URL]        = $this->baseurl . $logout_path;
 
         curl_setopt_array($ch, $curl_options);
@@ -250,13 +259,13 @@ class unifiprotectapi {
 
         if (curl_errno($ch)) {
             trigger_error('cURL error: ' . curl_error($ch));
+            return false;
         }
 
         curl_close($ch);
 
-        $this->is_loggedin = false;
-        $this->cookies     = '';
-
+        $this->is_logged_in = false;
+        $this->cookies      = '';
         return true;
     }
 
@@ -280,6 +289,30 @@ class unifiprotectapi {
     /****************************************************************
      * setter/getter functions from here:
      ****************************************************************/
+    /**
+     * Modify the private property $site
+     *
+     * NOTE:
+     * this method is useful to switch between sites
+     *
+     * @param string $site must be the short site name of a site to which the
+     *                     provided credentials have access
+     * @return string the new (short) site name
+     */
+    public function set_site($site) {
+        $this->check_site($site);
+        $this->site = trim($site);
+        return $this->site;
+    }
+
+    /**
+     * Get the private property $site
+     *
+     * @return string the current (short) site name
+     */
+    public function get_site() {
+        return $this->site;
+    }
 
     /**
      * Set debug mode
@@ -505,6 +538,44 @@ class unifiprotectapi {
         return $this->connect_timeout;
     }
 
+    public function set_curl_request_timeout($timeout) {
+        $this->curl_request_timeout = $timeout;
+    }
+
+    /**
+     * Get current value of the private property $request_timeout
+     *
+     * @return int current value of $request_timeout
+     */
+    public function get_curl_request_timeout() {
+        return $this->curl_request_timeout;
+    }
+
+    /**
+     * Set value for the private property $curl_http_version
+     *
+     * NOTES:
+     * - as of cURL version 7.62.0 the default value is CURL_HTTP_VERSION_2TLS which may cause issues
+     * - the default value used in this class is CURL_HTTP_VERSION_1_1
+     * - https://curl.se/libcurl/c/CURLOPT_HTTP_VERSION.html
+     *
+     * @param int $http_version new value for $curl_http_version, can be CURL_HTTP_VERSION_1_1 int(2)
+     *                          or CURL_HTTP_VERSION_2TLS int(4)
+     */
+    public function set_curl_http_version($http_version) {
+        $this->curl_http_version = $http_version;
+    }
+
+    /**
+     * Get current value of the private property $curl_http_version
+     *
+     * @return int current value of $request_timeout, can be CURL_HTTP_VERSION_1_1 int(2) or
+     *             CURL_HTTP_VERSION_2TLS int(4)
+     */
+    public function get_curl_http_version() {
+        return $this->curl_http_version;
+    }
+
     /****************************************************************
      * private and protected functions from here:
      ****************************************************************/
@@ -521,16 +592,19 @@ class unifiprotectapi {
      * @param  boolean      $login_required optional, whether the method requires to be logged in or not
      * @return bool|array                   [description]
      */
+
+
+
     protected function fetch_results($path, $payload = null, $boolean = false, $login_required = true) {
         /**
          * guard clause to check if logged in when needed
          */
-        if ($login_required && !$this->is_loggedin) {
+        if ($login_required && !$this->is_logged_in) {
             return false;
         }
 
         $this->last_results_raw = $this->exec_curl($path, $payload);
-        //var_dump($this->last_results_raw);
+
         if (is_string($this->last_results_raw)) {
             $response = json_decode($this->last_results_raw, true);
             if (!is_array($response)) {
@@ -562,6 +636,7 @@ class unifiprotectapi {
      */
     protected function catch_json_last_error() {
         if ($this->debug) {
+            $error = 'Unknown JSON error occurred';
             switch (json_last_error()) {
                 case JSON_ERROR_NONE:
                     // JSON is valid, no error has occurred and return true early
@@ -593,18 +668,20 @@ class unifiprotectapi {
                 case JSON_ERROR_UNSUPPORTED_TYPE:
                     $error = 'A value of a type that cannot be encoded was given';
                     break;
-                case JSON_ERROR_INVALID_PROPERTY_NAME:
-                    // PHP >= 7.0.0
-                    $error = 'A property name that cannot be encoded was given';
-                    break;
-                case JSON_ERROR_UTF16:
-                    // PHP >= 7.0.0
-                    $error = 'Malformed UTF-16 characters, possibly incorrectly encoded';
-                    break;
-                default:
-                    // an unknown error occurred
-                    $error = 'Unknown JSON error occurred';
-                    break;
+            }
+
+            /**
+             * check whether we have PHP >= 7.0.0
+             */
+            if (defined('JSON_ERROR_INVALID_PROPERTY_NAME') && defined('JSON_ERROR_UTF16')) {
+                switch (json_last_error()) {
+                    case JSON_ERROR_INVALID_PROPERTY_NAME:
+                        $error = 'A property name that cannot be encoded was given';
+                        break;
+                    case JSON_ERROR_UTF16:
+                        $error = 'Malformed UTF-16 characters, possibly incorrectly encoded';
+                        break;
+                }
             }
 
             trigger_error('JSON decode error: ' . $error);
@@ -624,7 +701,21 @@ class unifiprotectapi {
     protected function check_base_url($baseurl) {
         if (!filter_var($baseurl, FILTER_VALIDATE_URL) || substr($baseurl, -1) === '/') {
             trigger_error('The URL provided is incomplete, invalid or ends with a / character!');
+            return false;
+        }
 
+        return true;
+    }
+
+    /**
+     * Check the (short) site name
+     *
+     * @param string $site the (short) site name to check
+     * @return bool true if (short) site name is valid, else returns false
+     */
+    protected function check_site($site) {
+        if ($this->debug && preg_match("/\s/", $site)) {
+            trigger_error('The provided (short) site name may not contain any spaces');
             return false;
         }
 
@@ -656,7 +747,7 @@ class unifiprotectapi {
     /**
      * Add a cURL header containing the CSRF token from the TOKEN in our Cookie string
      *
-     * @return bool true upon success or false when unable to extract the CSRF token
+     * @return void
      */
     protected function create_x_csrf_token_header() {
         if (!empty($this->cookies) && strpos($this->cookies, 'TOKEN') !== false) {
@@ -670,7 +761,7 @@ class unifiprotectapi {
                 return;
             }
 
-            $this->headers[] = 'x-csrf-token: ' . json_decode(base64_decode($jwt_components[1]))->csrfToken;
+            $this->curl_headers[] = 'x-csrf-token: ' . json_decode(base64_decode($jwt_components[1]))->csrfToken;
         }
     }
 
@@ -689,17 +780,17 @@ class unifiprotectapi {
                 $cookie_crumbs = explode(';', $cookie);
                 foreach ($cookie_crumbs as $cookie_crumb) {
                     if (strpos($cookie_crumb, 'unifises') !== false) {
-                        $this->cookies     = $cookie_crumb;
-                        $this->is_loggedin = true;
-                        $this->is_unifi_os = false;
+                        $this->cookies      = $cookie_crumb;
+                        $this->is_logged_in = true;
+                        $this->is_unifi_os  = false;
 
                         break;
                     }
 
                     if (strpos($cookie_crumb, 'TOKEN') !== false) {
-                        $this->cookies     = $cookie_crumb;
-                        $this->is_loggedin = true;
-                        $this->is_unifi_os = true;
+                        $this->cookies      = $cookie_crumb;
+                        $this->is_logged_in = true;
+                        $this->is_unifi_os  = true;
 
                         break;
                     }
@@ -718,54 +809,52 @@ class unifiprotectapi {
      * @return bool|array|string          response returned by the controller API, false upon error
      */
     protected function exec_curl($path, $payload = null) {
-        if (!in_array($this->method, $this->methods_allowed)) {
-            trigger_error('an invalid HTTP request type was used: ' . $this->method);
-
+        if (!in_array($this->curl_method, $this->curl_methods_allowed)) {
+            trigger_error('an invalid HTTP request type was used: ' . $this->curl_method);
             return false;
         }
 
-        if (!($ch = $this->get_curl_resource())) {
-            trigger_error('get_curl_resource() did not return a resource');
-
+        if (!($ch = $this->get_curl_handle())) {
+            trigger_error('get_curl_handle() did not return a resource');
             return false;
         }
 
-        $this->headers = [];
-        $url = $this->baseurl . $path;
+        $this->curl_headers = [];
+        $url                = $this->baseurl . $path;
 
         if ($this->is_unifi_os) {
             $url = $this->baseurl . '/proxy/protect/api' . $path;
         }
-
         $curl_options = [
-            CURLOPT_URL => $url
+            CURLOPT_URL => $url,
         ];
+
         /**
          * when a payload is passed
          */
-        $json_payload  = '';
+        $json_payload = '';
         if (!empty($payload)) {
-            $json_payload = json_encode($payload, JSON_UNESCAPED_SLASHES);
+            $json_payload                     = json_encode($payload, JSON_UNESCAPED_SLASHES);
             $curl_options[CURLOPT_POSTFIELDS] = $json_payload;
 
             /**
              * add empty Expect header to prevent cURL from injecting an "Expect: 100-continue" header
              */
-            $this->headers = [
+            $this->curl_headers = [
                 'content-type: application/json',
-                'Expect:'
+                'Expect:',
             ];
 
             /**
              * should not use GET (the default request type) or DELETE when passing a payload,
              * switch to POST instead
              */
-            if ($this->method === 'GET' || $this->method === 'DELETE') {
-                $this->method = 'POST';
+            if ($this->curl_method === 'GET' || $this->curl_method === 'DELETE') {
+                $this->curl_method = 'POST';
             }
         }
 
-        switch ($this->method) {
+        switch ($this->curl_method) {
             case 'POST':
                 $curl_options[CURLOPT_POST] = true;
                 break;
@@ -780,12 +869,12 @@ class unifiprotectapi {
                 break;
         }
 
-        if ($this->is_unifi_os && $this->method !== 'GET') {
+        if ($this->is_unifi_os && $this->curl_method !== 'GET') {
             $this->create_x_csrf_token_header();
         }
 
-        if (count($this->headers) > 0) {
-            $curl_options[CURLOPT_HTTPHEADER] = $this->headers;
+        if (count($this->curl_headers) > 0) {
+            $curl_options[CURLOPT_HTTPHEADER] = $this->curl_headers;
         }
 
         curl_setopt_array($ch, $curl_options);
@@ -799,7 +888,7 @@ class unifiprotectapi {
         }
 
         /**
-         * fetch the HTTP response code
+         * get the HTTP response code
          */
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
@@ -807,12 +896,12 @@ class unifiprotectapi {
          * an HTTP response code 401 (Unauthorized) indicates the Cookie/Token has expired in which case
          * re-login is required
          */
-        if ($http_code == 401) {
+        if ($http_code === 401) {
             if ($this->debug) {
                 error_log(__FUNCTION__ . ': needed to reconnect to UniFi controller');
             }
 
-            if ($this->exec_retries == 0) {
+            if ($this->exec_retries === 0) {
                 /**
                  * explicitly clear the expired Cookie/Token, update other properties and log out before logging in again
                  */
@@ -820,8 +909,8 @@ class unifiprotectapi {
                     $_SESSION['unificookie'] = '';
                 }
 
-                $this->is_loggedin = false;
-                $this->cookies     = '';
+                $this->is_logged_in = false;
+                $this->cookies      = '';
                 $this->exec_retries++;
                 curl_close($ch);
 
@@ -833,7 +922,7 @@ class unifiprotectapi {
                 /**
                  * when re-login was successful, simply execute the same cURL request again
                  */
-                if ($this->is_loggedin) {
+                if ($this->is_logged_in) {
                     if ($this->debug) {
                         error_log(__FUNCTION__ . ': re-logged in, calling exec_curl again');
                     }
@@ -871,8 +960,7 @@ class unifiprotectapi {
         /**
          * set method back to default value, just in case
          */
-        $this->method = 'GET';
-
+        $this->curl_method = 'GET';
         return $response;
     }
 
@@ -881,14 +969,16 @@ class unifiprotectapi {
      *
      * @return object|bool|resource cURL handle upon success, false upon failure
      */
-    protected function get_curl_resource() {
+    protected function get_curl_handle() {
         $ch = curl_init();
         if (is_object($ch) || is_resource($ch)) {
             $curl_options = [
-                CURLOPT_PROTOCOLS      => CURLPROTO_HTTPS | CURLPROTO_HTTP,
-                CURLOPT_SSL_VERIFYPEER => $this->ssl_verify_peer,
-                CURLOPT_SSL_VERIFYHOST => $this->ssl_verify_host,
-                CURLOPT_CONNECTTIMEOUT => $this->connect_timeout,
+                CURLOPT_PROTOCOLS      => CURLPROTO_HTTPS,
+                CURLOPT_HTTP_VERSION   => $this->curl_http_version,
+                CURLOPT_SSL_VERIFYPEER => $this->curl_ssl_verify_peer,
+                CURLOPT_SSL_VERIFYHOST => $this->curl_ssl_verify_host,
+                CURLOPT_CONNECTTIMEOUT => $this->curl_connect_timeout,
+                CURLOPT_TIMEOUT        => $this->curl_request_timeout,
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_ENCODING       => '',
                 CURLOPT_HEADERFUNCTION => [$this, 'response_header_callback'],
@@ -904,7 +994,6 @@ class unifiprotectapi {
             }
 
             curl_setopt_array($ch, $curl_options);
-
             return $ch;
         }
 
