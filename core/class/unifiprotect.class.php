@@ -133,7 +133,7 @@ class unifiprotect extends eqLogic {
 		if (is_object(self::$_unifiprotectController)) {
 			$login = self::$_unifiprotectController->login();
 			if ($login !== true) {
-				log::add('unifiprotect', 'warning', "Erreur d'accès à Unifi Protect, Vérifiez qu'il répond ou le nom d'utilisateur et mot de passe (" . $login . ') ' . self::$_unifiprotectController->get_last_error_message());
+				log::add('unifiprotect', 'warning', "Erreur d'accès à Unifi Protect, Vérifiez qu'il répond ou le nom d'utilisateur et mot de passe (" . $login . ') : ' . self::$_unifiprotectController->get_last_error_message());
 				return false;
 			}
 		} else {
@@ -349,10 +349,14 @@ class unifiprotect extends eqLogic {
 	}
 
 	public function get_snapshot($_eqLogic) {
-		if ($_eqLogic->getEqType_name() == 'camera') {
-			return self::getController()->get_snapshot($_eqLogic->getConfiguration('ip'));
+		$controller = self::getController();
+		if (!is_object($controller)) {
+			return null;
 		}
-		return self::getController()->get_snapshot($_eqLogic->getConfiguration('device_id'));
+		if ($_eqLogic->getEqType_name() == 'camera') {
+			return $controller->get_snapshot($_eqLogic->getConfiguration('ip'));
+		}
+		return $controller->get_snapshot($_eqLogic->getConfiguration('device_id'));
 	}
 
 
