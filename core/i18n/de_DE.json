@@ -1,6 +1,6 @@
 {
     "plugins\/unifiprotect\/plugin_info\/configuration.php": {
-        "Unifi": "Unifi",
+        "Unifi": "Einheitlich",
         "Controleur Unifi protect": "Unifi Protect-Controller",
         "IP du controleur": "Controller-IP",
         "Utilisateur Unifi protect": "Unifi-Benutzer schützen",
@@ -40,7 +40,7 @@
         "Type": "Typ",
         "Inconnu": "Unbekannt",
         "Informations": "Information",
-        "IP": "IP",
+        "IP": "IPs",
         "Device ID": "Geräte ID",
         "Firmware": "Firmware",
         "Hardware\/Version": "Hardware Version",
