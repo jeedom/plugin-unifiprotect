@@ -49,6 +49,7 @@
         "Nom": "Nome",
         "Logical ID": "ID lógico",
         "Paramètres": "Definições",
+        "Etat": "Estado",
         "Action": "Açao"
     },
     "plugins\/unifiprotect\/desktop\/js\/unifiprotect.js": {

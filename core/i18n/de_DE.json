@@ -49,6 +49,7 @@
         "Nom": "Name",
         "Logical ID": "Logische ID",
         "Paramètres": "Einstellungen",
+        "Etat": "Bundesland",
         "Action": "Handlung"
     },
     "plugins\/unifiprotect\/desktop\/js\/unifiprotect.js": {

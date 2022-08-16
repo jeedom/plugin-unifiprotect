@@ -37,7 +37,7 @@
         "Options": "Options",
         "Activer": "Activate",
         "Visible": "Visible",
-        "Type": "Type",
+        "Type": "Kind",
         "Inconnu": "Unknown",
         "Informations": "Information",
         "IP": "IPs",
@@ -49,7 +49,8 @@
         "Nom": "Name",
         "Logical ID": "Logical ID",
         "Paramètres": "Settings",
-        "Action": "Action"
+        "Etat": "State",
+        "Action": "Stock"
     },
     "plugins\/unifiprotect\/desktop\/js\/unifiprotect.js": {
         "Nom de la commande": "Order name",

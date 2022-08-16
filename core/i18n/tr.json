@@ -49,6 +49,7 @@
         "Nom": "Nom",
         "Logical ID": "Logical ID",
         "Paramètres": "Paramètres",
+        "Etat": "Etat",
         "Action": "Action"
     },
     "plugins\/unifiprotect\/desktop\/js\/unifiprotect.js": {
