@@ -198,6 +198,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								<th>{{Logical ID}}</th>
 								<th>{{Paramètres}}</th>
 								<th>{{Options}}</th>
+								<th>{{Etat}}</th>
 								<th>{{Action}}</th>
 							</tr>
 						</thead>
