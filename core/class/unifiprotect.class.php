@@ -155,6 +155,7 @@ class unifiprotect extends eqLogic {
 			throw new Exception(__('Impossible de se connecter sur Unifi protect', __FILE__));
 		}
 		$datas = $controller->get_server_info();
+		log::add('unifiprotect', 'info', "Sync data : " . json_encode($datas));
 		if (!is_array($datas) || !isset($datas['nvr'])) {
 			throw new Exception(__('Erreur sur la recuperation des informations de Unifi Protect', __FILE__) . ' => ' . json_encode($datas));
 		}
@@ -218,6 +219,25 @@ class unifiprotect extends eqLogic {
 				$camera_jeedom->save(true);
 			}
 		}
+		foreach ($datas['chimes'] as $chime) {
+			log::add('unifiprotect', 'info', "Find chime " . $chime['name'] . "(" . $chime['mac'] . ")(" . $chime['type'] . "):" . json_encode($chime));
+			$eqLogic = self::byLogicalId($chime['mac'], 'unifiprotect');
+			if (!is_object($eqLogic)) {
+				$eqLogic = new unifiprotect();
+				$eqLogic->setName($chime['name']);
+				$eqLogic->setIsEnable(1);
+				$eqLogic->setIsVisible(1);
+				$eqLogic->setLogicalId($chime['mac']);
+				$eqLogic->setEqType_name('unifiprotect');
+			}
+			$eqLogic->setConfiguration('type', $chime['type']);
+			$eqLogic->setConfiguration('isChime', true);
+			$eqLogic->setConfiguration('device_id', $chime['id']);
+			$eqLogic->setConfiguration('mac', $chime['mac']);
+			$eqLogic->setConfiguration('ip', $chime['host']);
+			$eqLogic->setConfiguration('firmware', $chime['firmwareVersion']);
+			$eqLogic->save();
+		}
 		self::pull();
 	}
 
@@ -226,7 +246,6 @@ class unifiprotect extends eqLogic {
 		$m = floor(($ss % 3600) / 60);
 		$h = floor(($ss % 86400) / 3600);
 		$d = floor(($ss) / 86400);
-
 		if ($d)
 			return sprintf("%d.%02d:%02d:%02d", $d, $h, $m, $s);
 		else
@@ -255,6 +274,12 @@ class unifiprotect extends eqLogic {
 				foreach ($server_info['cameras'] as $camera) {
 					if ($camera['mac'] == $eqLogic->getLogicalId()) {
 						$datas = $camera;
+					}
+				}
+			} else if ($eqLogic->getConfiguration('isChime', false)) {
+				foreach ($server_info['chimes'] as $chime) {
+					if ($chime['mac'] == $eqLogic->getLogicalId()) {
+						$datas = $chime;
 					}
 				}
 			} else {

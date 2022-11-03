@@ -1,0 +1,33 @@
+{
+    "name" : "UP Chime",
+    "commands": [
+      {
+        "name": "Connectée",
+        "type": "info",
+        "subType": "binary",
+        "logicalId":"isConnected",
+        "isVisible": "1"
+      },
+      {
+        "name": "Etat",
+        "type": "info",
+        "subType": "string",
+        "logicalId":"state",
+        "isVisible": "1"
+      },
+      {
+        "name": "Vu Dernière Fois",
+        "type": "info",
+        "subType": "string",
+        "logicalId":"lastSeen",
+        "isVisible": "1"
+      },
+      {
+        "name": "Rafraichir",
+        "type": "action",
+        "subType": "other",
+        "logicalId":"refresh",
+        "isVisible": "1"
+      }
+    ]
+}
