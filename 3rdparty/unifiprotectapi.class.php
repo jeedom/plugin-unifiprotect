@@ -273,6 +273,26 @@ class unifiprotectapi {
      * Functions to access UniFi controller API routes from here:
      ****************************************************************/
 
+    public function custom_api_request($path, $method = 'GET', $payload = null, $return = 'array') {
+        if (!in_array($method, $this->curl_methods_allowed)) {
+            return false;
+        }
+
+        if (strpos($path, '/') !== 0) {
+            return false;
+        }
+
+        $this->curl_method = $method;
+
+        if ($return === 'array') {
+            return $this->fetch_results($path, $payload);
+        } elseif ($return === 'boolean') {
+            return $this->fetch_results_boolean($path, $payload);
+        }
+
+        return false;
+    }
+
     public function get_server_info() {
         return $this->fetch_results('/bootstrap');
     }
@@ -283,6 +303,11 @@ class unifiprotectapi {
 
     public function get_snapshot($_camera_id) {
         return $this->fetch_results('/cameras/' . $_camera_id . '/snapshot?force=true');
+    }
+
+    public function set_notification($_user_id, $_state) {
+        $payload = array('state' => $_state);
+        var_dump(self::custom_api_request('/users/' . $_user_id . '/notificationsV2', 'PATCH', $payload));
     }
 
 

@@ -426,6 +426,11 @@ class unifiprotectCmd extends cmd {
 		if ($this->getType() == 'info') {
 			return;
 		}
+		if ($this->getLogicalId() == 'setNotification') {
+			$controller = unifiprotect::getController();
+			$controller->set_notification($_options['title'], $_options['message']);
+			return;
+		}
 		unifiprotect::pull();
 	}
 
