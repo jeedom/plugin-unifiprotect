@@ -127,8 +127,11 @@ class unifiprotect extends eqLogic {
 		$controller_password = config::byKey('controller_password', 'unifiprotect', '', true);
 		$controller_url = 'https://' . config::byKey('controller_ip', 'unifiprotect', '', true) . ':' . config::byKey('controller_port', 'unifiprotect', '8443', true);
 		$site_id = config::byKey('site_id', 'unifiprotect', 'default', true);
+		if ($site_id == '') {
+			$site_id = 'default';
+		}
 		if (self::$_unifiprotectController === null) {
-			self::$_unifiprotectController = new unifiprotectapi($controller_user, $controller_password, $controller_url);
+			self::$_unifiprotectController = new unifiprotectapi($controller_user, $controller_password, $controller_url, $site_id);
 		}
 		if (is_object(self::$_unifiprotectController)) {
 			$login = self::$_unifiprotectController->login();
