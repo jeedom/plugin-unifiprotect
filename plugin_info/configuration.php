@@ -32,7 +32,12 @@ if (!isConnect()) {
 			<label class="col-lg-4 control-label">{{Controleur Unifi protect}}</label>
 			<div class="col-lg-3">
 				<div class="input-group">
-					<span class="input-group-addon roundedLeft">https://</span><input type="text" class="configKey form-control" data-l1key="controller_ip" placeholder="{{IP du controleur}}" /><span class="input-group-addon">:</span><input type="text" class="configKey form-control roundedRight" data-l1key="controller_port" placeholder="443" style="width:60px" />
+					<span class="input-group-addon roundedLeft">https://</span>
+					<input type="text" class="configKey form-control" data-l1key="controller_ip" placeholder="{{IP du controleur}}" />
+					<span class="input-group-addon">:</span>
+					<input type="text" class="configKey form-control roundedRight" data-l1key="controller_port" placeholder="443" />
+					<span class="input-group-addon">/</span>
+					<input type="text" class="configKey form-control roundedRight" data-l1key="site_id" placeholder="" />
 				</div>
 			</div>
 		</div>
