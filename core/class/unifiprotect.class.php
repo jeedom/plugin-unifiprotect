@@ -418,6 +418,12 @@ class unifiprotect extends eqLogic {
 	}
 
 	public function getImage() {
+		if(method_exists($this,'getCustomImage')){
+			$customImage = $this->getCustomImage();
+			if($customImage !== null){
+			   return $customImage;
+			}
+		}
 		if (file_exists(__DIR__ . '/../config/devices/' .  $this->getConfiguration('type') . '.png')) {
 			return 'plugins/unifiprotect/core/config/devices/' .  $this->getConfiguration('type') . '.png';
 		}
