@@ -158,10 +158,18 @@ class unifiprotect extends eqLogic {
 			throw new Exception(__('Impossible de se connecter sur Unifi protect', __FILE__));
 		}
 		$datas = $controller->get_server_info();
-		log::add('unifiprotect', 'info', "Sync data : " . json_encode($datas));
+		if (!is_array($datas) || !isset($datas['nvr'])) {
+			sleep(1);
+			$datas = $controller->get_server_info();
+		}
+		if (!is_array($datas) || !isset($datas['nvr'])) {
+			sleep(5);
+			$datas = $controller->get_server_info();
+		}
 		if (!is_array($datas) || !isset($datas['nvr'])) {
 			throw new Exception(__('Erreur sur la recuperation des informations de Unifi Protect', __FILE__) . ' => ' . json_encode($datas));
 		}
+		log::add('unifiprotect', 'info', "Sync data : " . json_encode($datas));
 		log::add('unifiprotect', 'info', "Find NVR " . $datas['nvr']['name'] . "(" . $datas['nvr']['mac'] . ")(" . $datas['nvr']['type'] . "):" . json_encode($datas['nvr']));
 		$eqLogic = self::byLogicalId($datas['nvr']['mac'], 'unifiprotect');
 		if (!is_object($eqLogic)) {
@@ -410,6 +418,12 @@ class unifiprotect extends eqLogic {
 	}
 
 	public function getImage() {
+		if(method_exists($this,'getCustomImage')){
+			$customImage = $this->getCustomImage();
+			if($customImage !== null){
+			   return $customImage;
+			}
+		}
 		if (file_exists(__DIR__ . '/../config/devices/' .  $this->getConfiguration('type') . '.png')) {
 			return 'plugins/unifiprotect/core/config/devices/' .  $this->getConfiguration('type') . '.png';
 		}
