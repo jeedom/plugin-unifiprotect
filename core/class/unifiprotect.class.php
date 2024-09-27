@@ -339,7 +339,7 @@ class unifiprotect extends eqLogic {
 			}
 		}
 		if (!config::byKey('dontGetEvent', 'unifiprotect', false)) {
-			$raw_events = $controller->get_raw_events(strtotime('now ' . (10 * config::byKey('DeamonSleepTime', 'unifiprotect', 3, true)) . ' seconds') * 1000, strtotime('now +10min') * 1000);
+			$raw_events = $controller->get_raw_events(strtotime('now -' . (10 * config::byKey('DeamonSleepTime', 'unifiprotect', 3, true)) . ' seconds') * 1000, strtotime('now +10min') * 1000);
 			log::add('unifiprotect', 'debug', json_encode($raw_events));
 			$events = array();
 			foreach ($raw_events as $raw_event) {
