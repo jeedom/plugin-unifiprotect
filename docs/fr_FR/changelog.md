@@ -8,9 +8,10 @@
 
 # 29/06/2026
 
-- Correction : la configuration affichait le port par défaut ´443´, mais utilisait en réalité le port ´8443´. Avec Protect 7.1, c’est bien le port ´443´ qui doit être utilisé. Vérifiez donc la configuration du plugin et forcez le port ´8443´ si votre installation l’exige.
 - Ajout du support de UCG Max
 - Ajout du support de la G5 Turret Ultra
+- Correction : la configuration affichait le port par défaut ´443´, mais utilisait en réalité le port ´8443´. Avec Protect 7.1, c’est bien le port ´443´ qui doit être utilisé. Vérifiez donc la configuration du plugin et forcez le port ´8443´ si votre installation l’exige.
+- Corrections & optimisations mineures
 - Revues des traductions automatiques
 
 # 28/09/2024

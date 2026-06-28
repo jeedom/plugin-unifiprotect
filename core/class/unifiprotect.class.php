@@ -21,6 +21,7 @@ require_once dirname(__FILE__) . '/../../3rdparty/unifiprotectapi.class.php';
 
 class unifiprotect extends eqLogic {
 	/***************************Attributs*******************************/
+	/** @var \unifiprotectapi */
 	private static $_unifiprotectController = null;
 	public static $_encryptConfigKey = array('controller_ip', 'controller_user', 'controller_password');
 
@@ -77,6 +78,11 @@ class unifiprotect extends eqLogic {
 		$cron->halt();
 	}
 
+	/**
+	 * @param bool $_mode
+	 * @return void
+	 * @throws Exception
+	 */
 	public static function deamon_changeAutoMode($_mode) {
 		$cron = cron::byClassAndFunction('unifiprotect', 'pull');
 		if (!is_object($cron)) {
@@ -117,7 +123,7 @@ class unifiprotect extends eqLogic {
 
 	public static function killController() {
 		if (self::$_unifiprotectController !== null) {
-			self::$_unifiprotectController = self::logout();
+			self::$_unifiprotectController->logout();
 		}
 		self::$_unifiprotectController = null;
 	}
@@ -144,12 +150,6 @@ class unifiprotect extends eqLogic {
 			return false;
 		}
 		return self::$_unifiprotectController;
-	}
-
-	public static function logout() {
-		if (self::$_unifiprotectController !== null) {
-			self::$_unifiprotectController->logout();
-		}
 	}
 
 	public static function sync() {
@@ -252,7 +252,7 @@ class unifiprotect extends eqLogic {
 		self::pull();
 	}
 
-	public static function secondsToTime($ss) {
+	private static function secondsToTime(float $ss) {
 		$s = $ss % 60;
 		$m = floor(($ss % 3600) / 60);
 		$h = floor(($ss % 86400) / 3600);
@@ -329,7 +329,8 @@ class unifiprotect extends eqLogic {
 					}
 					$value = $value[$key];
 				}
-				if (in_array($key, array('lastSeen', 'lastMotion', 'lastRing'))) {
+				$lastSegment = end($paths);
+				if (in_array($lastSegment, array('lastSeen', 'lastMotion', 'lastRing'))) {
 					$value = date('Y-m-d H:i:s', $value / 1000);
 				}
 				if ($cmd->getLogicalId() == 'nvr::uptime') {
@@ -384,7 +385,7 @@ class unifiprotect extends eqLogic {
 		}
 	}
 
-	public function get_snapshot($_eqLogic) {
+	public function get_snapshot(\eqLogic $_eqLogic) {
 		$controller = self::getController();
 		if (!is_object($controller)) {
 			return null;
