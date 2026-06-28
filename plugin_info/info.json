@@ -17,7 +17,10 @@
     "author": "Jeedom SAS",
     "hasDependency": false,
     "hasOwnDeamon": true,
-    "require": "3.3.24",
+    "require": "4.5",
+    "os": {
+        "min": 11
+    },
     "category": "monitoring",
     "languages": [
         "fr_FR",
