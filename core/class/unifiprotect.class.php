@@ -125,7 +125,7 @@ class unifiprotect extends eqLogic {
 	public static function login() {
 		$controller_user = config::byKey('controller_user', 'unifiprotect', '', true);
 		$controller_password = config::byKey('controller_password', 'unifiprotect', '', true);
-		$controller_url = 'https://' . config::byKey('controller_ip', 'unifiprotect', '', true) . ':' . config::byKey('controller_port', 'unifiprotect', '8443', true);
+		$controller_url = 'https://' . config::byKey('controller_ip', 'unifiprotect', '', true) . ':' . config::byKey('controller_port', 'unifiprotect', '443', true);
 		$site_id = config::byKey('site_id', 'unifiprotect', 'default', true);
 		if ($site_id == '') {
 			$site_id = 'default';
@@ -418,10 +418,10 @@ class unifiprotect extends eqLogic {
 	}
 
 	public function getImage() {
-		if(method_exists($this,'getCustomImage')){
+		if (method_exists($this, 'getCustomImage')) {
 			$customImage = $this->getCustomImage();
-			if($customImage !== null){
-			   return $customImage;
+			if ($customImage !== null) {
+				return $customImage;
 			}
 		}
 		if (file_exists(__DIR__ . '/../config/devices/' .  $this->getConfiguration('type') . '.png')) {
