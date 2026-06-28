@@ -149,26 +149,26 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								<form class="form-horizontal">
 									<fieldset>
 										<div class="form-group">
-											<label class="col-sm-3 control-label">{{IP}}</label>
-											<div class="col-sm-3">
+											<label class="col-sm-4 control-label">{{IP}}</label>
+											<div class="col-sm-8">
 												<span class="eqLogicAttr label label-default" data-l1key="configuration" data-l2key="ip"></span>
 											</div>
 										</div>
 										<div class="form-group">
-											<label class="col-sm-3 control-label">{{Device ID}}</label>
-											<div class="col-sm-3">
+											<label class="col-sm-4 control-label">{{Device ID}}</label>
+											<div class="col-sm-8">
 												<span class="eqLogicAttr label label-default" data-l1key="configuration" data-l2key="device_id"></span>
 											</div>
 										</div>
 										<div class="form-group">
-											<label class="col-sm-3 control-label">{{Firmware}}</label>
-											<div class="col-sm-3">
+											<label class="col-sm-4 control-label">{{Firmware}}</label>
+											<div class="col-sm-8">
 												<span class="eqLogicAttr label label-default" data-l1key="configuration" data-l2key="firmware"></span>
 											</div>
 										</div>
 										<div class="form-group">
-											<label class="col-sm-3 control-label">{{Hardware/Version}}</label>
-											<div class="col-sm-3">
+											<label class="col-sm-4 control-label">{{Hardware/Version}}</label>
+											<div class="col-sm-8">
 												<span class="eqLogicAttr label label-default" data-l1key="configuration" data-l2key="hardware"></span>
 											</div>
 										</div>
