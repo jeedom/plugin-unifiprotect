@@ -8,6 +8,7 @@
 
 # 29/07/2026
 
+- Correction d'un bug lors de la sauvegarde d'un équipement
 - Revue de la page de configuration du plugin
 
 # 29/06/2026

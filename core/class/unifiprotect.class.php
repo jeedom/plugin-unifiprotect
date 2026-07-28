@@ -142,11 +142,15 @@ class unifiprotect extends eqLogic {
 		if (is_object(self::$_unifiprotectController)) {
 			$login = self::$_unifiprotectController->login();
 			if ($login !== true) {
-				log::add('unifiprotect', 'warning', "Erreur d'accès à Unifi Protect, Vérifiez qu'il répond ou le nom d'utilisateur et mot de passe (" . $login . ') : ' . self::$_unifiprotectController->get_last_error_message());
+				if (is_int($login)) {
+					log::add('unifiprotect', 'warning', "Erreur d'accès à Unifi Protect, vérifiez le nom d'utilisateur et mot de passe (HTTP code: $login): " . self::$_unifiprotectController->get_last_error_message());
+				} else {
+					log::add('unifiprotect', 'warning', "Erreur d'accès à Unifi Protect, vérifiez qu'il répond: " . self::$_unifiprotectController->get_last_error_message());
+				}
 				return false;
 			}
 		} else {
-			log::add('unifiprotect', 'error', "Error Création client vers : " . $controller_url);
+			log::add('unifiprotect', 'error', "Erreur création client vers : " . $controller_url);
 			return false;
 		}
 		return self::$_unifiprotectController;
@@ -277,7 +281,7 @@ class unifiprotect extends eqLogic {
 			foreach ($eqLogics as $eqLogic) {
 				$eqLogic->checkAndUpdateCmd('state', 0);
 			}
-			throw new Exception(__('Erreur sur la recuperation des informations de Unifi Protect', __FILE__) . ' => ' . json_encode($server_info));
+			throw new Exception(__('Erreur sur la récupération des informations de Unifi Protect', __FILE__) . ' => ' . json_encode($server_info));
 		}
 		foreach ($eqLogics as $eqLogic) {
 			$datas = null;
@@ -400,21 +404,25 @@ class unifiprotect extends eqLogic {
 	/***********************Methode d'instance**************************/
 
 	public function postSave() {
-		if ($this->getConfiguration('applyType') != $this->getConfiguration('type')) {
-			$this->applyModuleConfiguration();
-		}
+		$this->applyModuleConfiguration();
 	}
 
 	public function applyModuleConfiguration() {
+		if ($this->getConfiguration('applyType') == $this->getConfiguration('type')) {
+			return true;
+		}
+
 		$this->setConfiguration('applyType', $this->getConfiguration('type'));
+		$this->save(true);
+
 		if ($this->getConfiguration('type') == '') {
-			$this->save();
 			return true;
 		}
 		$device = self::devicesParameters($this->getConfiguration('type'));
 		if (!is_array($device) || !isset($device['commands'])) {
 			return true;
 		}
+		log::add(__CLASS__, 'info', "Import configuration for device type " . $this->getConfiguration('type'));
 		$this->import($device);
 	}
 
