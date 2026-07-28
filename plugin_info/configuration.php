@@ -29,34 +29,39 @@ if (!isConnect()) {
 			<i class="fa fa-list-alt"></i> {{Unifi}}
 		</legend>
 		<div class="form-group">
-			<label class="col-lg-4 control-label">{{Controleur Unifi protect}}</label>
-			<div class="col-lg-3">
+			<label class="col-lg-3 control-label">{{Controleur Unifi protect}}</label>
+			<div class="col-lg-5">
 				<div class="input-group">
 					<span class="input-group-addon roundedLeft">https://</span>
 					<input type="text" class="configKey form-control" data-l1key="controller_ip" placeholder="{{IP du controleur}}" />
 					<span class="input-group-addon">:</span>
-					<input type="text" class="configKey form-control roundedRight" data-l1key="controller_port" placeholder="443" />
+					<input type="text" class="configKey form-control" data-l1key="controller_port" placeholder="443" />
 					<span class="input-group-addon">/</span>
 					<input type="text" class="configKey form-control roundedRight" data-l1key="site_id" placeholder="" />
 				</div>
 			</div>
 		</div>
 		<div class="form-group">
-			<label class="col-lg-4 control-label">{{Utilisateur Unifi protect}}</label>
-			<div class="col-lg-3">
+			<label class="col-lg-3 control-label">{{Utilisateur Unifi protect}}</label>
+			<div class="col-lg-5">
 				<input class="configKey form-control" data-l1key="controller_user" placeholder="{{Utilisateur}}" />
 			</div>
 		</div>
 		<div class="form-group">
-			<label class="col-lg-4 control-label">{{Mot de passe Unifi protect}}</label>
-			<div class="col-lg-3">
-				<input class="configKey form-control" data-l1key="controller_password" placeholder="{{Mot de passe}}" type="password" />
+			<label class="col-lg-3 control-label">{{Mot de passe Unifi protect}}</label>
+			<div class="col-lg-5">
+				<div class="input-group">
+					<input type="text" class="configKey form-control roundedLeft inputPassword" data-l1key="controller_password" placeholder="{{Saisir le mot de passe}}" autocomplete="off" />
+					<span class="input-group-btn">
+						<a class="btn btn-default form-control bt_showPass roundedRight"><i class="fas fa-eye"></i></a>
+					</span>
+				</div>
 			</div>
 		</div>
 		<div class="form-group">
-			<label class="col-lg-4 control-label">{{Découverte}}</label>
-			<div class="col-lg-3">
-				<a class="btn btn-default" id="bt_syncUnifiProtect"><i class='fa fa-refresh'></i> {{Rechercher les équipements Unifi protect}}</a>
+			<label class="col-lg-3 control-label">{{Découverte}}</label>
+			<div class="col-lg-5">
+				<a class="btn btn-default" id="bt_syncUnifiProtect"><i class='fas fa-sync'></i> {{Rechercher les équipements Unifi protect}}</a>
 			</div>
 		</div>
 	</fieldset>
@@ -65,14 +70,17 @@ if (!isConnect()) {
 			<i class="fa fa-list-alt"></i> {{Paramètres}}
 		</legend>
 		<div class="form-group">
-			<label class="col-lg-4 control-label">{{Fréquence de rafraîchissement}}</label>
-			<div class="col-sm-3">
-				<input class="configKey form-control" data-l1key="DeamonSleepTime" placeholder="3" />{{secondes}}
+			<label class="col-lg-3 control-label">{{Fréquence de rafraîchissement}}</label>
+			<div class="col-lg-2">
+				<div class="input-group">
+					<input class="configKey form-control roundedLeft" data-l1key="DeamonSleepTime" placeholder="3" />
+					<span class="input-group-addon roundedRight">{{secondes}}</span>
+				</div>
 			</div>
 		</div>
 		<div class="form-group">
-			<label class="col-lg-4 control-label">{{Ne pas récuperer les évenements}}</label>
-			<div class="col-sm-3">
+			<label class="col-lg-3 control-label">{{Ne pas récuperer les évenements}}</label>
+			<div class="col-lg-5">
 				<input type="checkbox" class="configKey" data-l1key="dontGetEvent" />
 			</div>
 		</div>
