@@ -1,5 +1,8 @@
 {
   "name": "UVC G5 Turret Ultra",
+  "category": {
+    "security": "1"
+  },
   "commands": [
     {
       "name": "Connectée",
@@ -74,6 +77,24 @@
       "configuration": {
         "repeatEventManagement": "always"
       }
+    },
+    {
+      "name": "Enregistrement",
+      "type": "info",
+      "subType": "string",
+      "logicalId": "recordingSettings::mode",
+      "isVisible": "1"
+    },
+    {
+      "name": "Mode enregistrement",
+      "type": "action",
+      "subType": "select",
+      "logicalId": "setRecordingMode",
+      "isVisible": "1",
+      "configuration": {
+        "listValue": "always|Toujours;never|Jamais;schedule|Planification;detections|Détections;adaptive|Adaptatif"
+      },
+      "value": "Enregistrement"
     }
   ]
 }

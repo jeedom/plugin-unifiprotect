@@ -268,6 +268,7 @@ class unifiprotect extends eqLogic {
 	}
 
 	public static function pull() {
+		/** @var unifiprotect[] $eqLogics */
 		$eqLogics = self::byType('unifiprotect', true);
 		$controller = self::getController();
 		if ($controller  === false) {
@@ -283,6 +284,7 @@ class unifiprotect extends eqLogic {
 			}
 			throw new Exception(__('Erreur sur la récupération des informations de Unifi Protect', __FILE__) . ' => ' . json_encode($server_info));
 		}
+		log::add('unifiprotect', 'debug', "Pull data : " . json_encode($server_info));
 		foreach ($eqLogics as $eqLogic) {
 			$datas = null;
 			if ($eqLogic->getConfiguration('isCamera', false)) {
@@ -303,45 +305,7 @@ class unifiprotect extends eqLogic {
 			if ($datas == null) {
 				continue;
 			}
-			foreach ($eqLogic->getCmd('info') as $cmd) {
-				if ($eqLogic->getConfiguration('isNVR', false)) {
-					if ($cmd->getLogicalId() == 'state') {
-						$eqLogic->checkAndUpdateCmd($cmd, 1);
-						continue;
-					}
-					if ($cmd->getLogicalId() == 'memory_used') {
-						if (isset($datas['nvr']) && isset($datas['nvr']['systemInfo']) && isset($datas['nvr']['systemInfo']['memory'])) {
-							$value = ($datas['nvr']['systemInfo']['memory']['total'] - $datas['nvr']['systemInfo']['memory']['available']) / $datas['nvr']['systemInfo']['memory']['total'];
-							$eqLogic->checkAndUpdateCmd($cmd, round($value * 100, 2));
-						}
-						continue;
-					}
-					if ($cmd->getLogicalId() == 'tmpfs_used') {
-						if (isset($datas['nvr']) && isset($datas['nvr']['systemInfo']) && isset($datas['nvr']['systemInfo']['tmpfs'])) {
-							$value = ($datas['nvr']['systemInfo']['tmpfs']['total'] - $datas['nvr']['systemInfo']['tmpfs']['available']) / $datas['nvr']['systemInfo']['tmpfs']['total'];
-							$eqLogic->checkAndUpdateCmd($cmd, round($value * 100, 2));
-						}
-						continue;
-					}
-				}
-
-				$paths = explode('::', $cmd->getLogicalId());
-				$value = $datas;
-				foreach ($paths as $key) {
-					if (!isset($value[$key])) {
-						continue 2;
-					}
-					$value = $value[$key];
-				}
-				$lastSegment = end($paths);
-				if (in_array($lastSegment, array('lastSeen', 'lastMotion', 'lastRing'))) {
-					$value = date('Y-m-d H:i:s', $value / 1000);
-				}
-				if ($cmd->getLogicalId() == 'nvr::uptime') {
-					$value = self::secondsToTime($value / 1000);
-				}
-				$eqLogic->checkAndUpdateCmd($cmd, $value);
-			}
+			$eqLogic->update_cmds($datas);
 		}
 		if (!config::byKey('dontGetEvent', 'unifiprotect', false)) {
 			$raw_events = $controller->get_raw_events(strtotime('now -' . (10 * config::byKey('DeamonSleepTime', 'unifiprotect', 3, true)) . ' seconds') * 1000, strtotime('now +10min') * 1000);
@@ -389,6 +353,48 @@ class unifiprotect extends eqLogic {
 		}
 	}
 
+	public function update_cmds($datas) {
+		foreach ($this->getCmd('info') as $cmd) {
+			if ($this->getConfiguration('isNVR', false)) {
+				if ($cmd->getLogicalId() == 'state') {
+					$this->checkAndUpdateCmd($cmd, 1);
+					continue;
+				}
+				if ($cmd->getLogicalId() == 'memory_used') {
+					if (isset($datas['nvr']) && isset($datas['nvr']['systemInfo']) && isset($datas['nvr']['systemInfo']['memory'])) {
+						$value = ($datas['nvr']['systemInfo']['memory']['total'] - $datas['nvr']['systemInfo']['memory']['available']) / $datas['nvr']['systemInfo']['memory']['total'];
+						$this->checkAndUpdateCmd($cmd, round($value * 100, 2));
+					}
+					continue;
+				}
+				if ($cmd->getLogicalId() == 'tmpfs_used') {
+					if (isset($datas['nvr']) && isset($datas['nvr']['systemInfo']) && isset($datas['nvr']['systemInfo']['tmpfs'])) {
+						$value = ($datas['nvr']['systemInfo']['tmpfs']['total'] - $datas['nvr']['systemInfo']['tmpfs']['available']) / $datas['nvr']['systemInfo']['tmpfs']['total'];
+						$this->checkAndUpdateCmd($cmd, round($value * 100, 2));
+					}
+					continue;
+				}
+			}
+
+			$paths = explode('::', $cmd->getLogicalId());
+			$value = $datas;
+			foreach ($paths as $key) {
+				if (!isset($value[$key])) {
+					continue 2;
+				}
+				$value = $value[$key];
+			}
+			$lastSegment = end($paths);
+			if (in_array($lastSegment, array('lastSeen', 'lastMotion', 'lastRing'))) {
+				$value = date('Y-m-d H:i:s', $value / 1000);
+			}
+			if ($cmd->getLogicalId() == 'nvr::uptime') {
+				$value = self::secondsToTime($value / 1000);
+			}
+			$this->checkAndUpdateCmd($cmd, $value);
+		}
+	}
+
 	public function get_snapshot(\eqLogic $_eqLogic) {
 		$controller = self::getController();
 		if (!is_object($controller)) {
@@ -415,6 +421,10 @@ class unifiprotect extends eqLogic {
 		$this->setConfiguration('applyType', $this->getConfiguration('type'));
 		$this->save(true);
 
+		$this->importConfig(false);
+	}
+
+	public function importConfig(bool $_dontRemove = true) {
 		if ($this->getConfiguration('type') == '') {
 			return true;
 		}
@@ -422,8 +432,8 @@ class unifiprotect extends eqLogic {
 		if (!is_array($device) || !isset($device['commands'])) {
 			return true;
 		}
-		log::add(__CLASS__, 'info', "Import configuration for device type " . $this->getConfiguration('type'));
-		$this->import($device);
+		log::add(__CLASS__, 'info', "Apply configuration for device type " . $this->getConfiguration('type'));
+		$this->import($device, $_dontRemove);
 	}
 
 	public function getImage() {
@@ -457,6 +467,23 @@ class unifiprotectCmd extends cmd {
 			$controller->set_notification($_options['title'], $_options['message']);
 			return;
 		}
+
+		if ($this->getLogicalId() == 'setRecordingMode') {
+			/** @var unifiprotect $eqLogic */
+			$eqLogic = $this->getEqLogic();
+			if (!$eqLogic->getConfiguration('isCamera', false)) {
+				throw new Exception(__('Cette commande ne peut être exécutée que sur un périphérique de type caméra', __FILE__));
+			}
+			$camera_id = $eqLogic->getConfiguration('device_id');
+
+			$controller = unifiprotect::getController();
+			log::add('unifiprotect', 'info', "Set recording mode for camera $camera_id to " . $_options['select']);
+			$result = $controller->set_recording_mode($camera_id, $_options['select']);
+			log::add('unifiprotect', 'debug', "Result: " . json_encode($result));
+			$eqLogic->update_cmds($result);
+			return;
+		}
+
 		unifiprotect::pull();
 	}
 

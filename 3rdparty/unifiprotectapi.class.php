@@ -109,7 +109,7 @@ class unifiprotectapi {
     /**
      * Login to the UniFi controller
      *
-     * @return bool returns true upon success
+     * @return bool|int returns true upon success, false or HTTP response code on access failure (e.g. 400 or 401)
      */
     public function login() {
         /**
@@ -177,7 +177,7 @@ class unifiprotectapi {
          * execute the cURL request and get the HTTP response code
          */
         $response  = curl_exec($ch);
-        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $http_code = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
 
         if (curl_errno($ch)) {
             trigger_error('cURL error: ' . curl_error($ch));
@@ -308,6 +308,19 @@ class unifiprotectapi {
     public function set_notification($_user_id, $_state) {
         $payload = array('state' => $_state);
         var_dump(self::custom_api_request('/users/' . $_user_id . '/notificationsV2', 'PATCH', $payload));
+    }
+
+    /**
+     * set recording mode
+     *
+     * @param string $_camera_id
+     * @param string $mode, should be one of ['always', 'never', 'detections', 'schedule', 'adaptive']
+     */
+    public function set_recording_mode(string $_camera_id, string $mode) {
+        $_settings = ["recordingSettings" => [
+            "mode" => $mode
+        ]];
+        return $this->custom_api_request("/cameras/{$_camera_id}", 'PATCH', $_settings);
     }
 
 
