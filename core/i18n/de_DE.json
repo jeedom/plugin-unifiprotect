@@ -4,7 +4,9 @@
         "Aucune méthode correspondante à : ": "Keine Methode entsprechend:"
     },
     "plugins\/unifiprotect\/core\/class\/unifiprotect.class.php": {
+        "Cette commande ne peut être exécutée que sur un périphérique de type caméra": "Dieser Befehl kann nur auf einem Gerät vom Typ „Kamera“ ausgeführt werden",
         "Erreur sur la recuperation des informations de Unifi Protect": "Fehler beim Abrufen von Informationen von Unifi Protect",
+        "Erreur sur la récupération des informations de Unifi Protect": "Fehler beim Abrufen der Informationen von Unifi Protect",
         "Impossible de se connecter sur Unifi protect": "Verbindung zu Unifi Protect nicht möglich",
         "Tache cron introuvable": "Cronjob nicht gefunden",
         "Veuillez vérifier la configuration": "Bitte überprüfen Sie die Konfiguration"
@@ -65,11 +67,11 @@
         "Découverte": "Entdeckung",
         "Fréquence de rafraîchissement": "Aktualisierungsrate",
         "IP du controleur": "Controller-IP",
-        "Mot de passe": "Passwort",
         "Mot de passe Unifi protect": "Unifi-Schutz-Passwort",
         "Ne pas récuperer les évenements": "Keine Ereignisse sammeln",
         "Paramètres": "Einstellungen",
         "Rechercher les équipements Unifi protect": "Unifi Protect-Geräte finden",
+        "Saisir le mot de passe": "Passwort eingeben",
         "Synchronisation réussie": "Synchronisierung erfolgreich",
         "Unifi": "Einheitlich",
         "Utilisateur": "Benutzer",
