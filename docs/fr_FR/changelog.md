@@ -6,6 +6,8 @@
 >
 >Pour rappel s'il n'y a pas d'information sur la mise à jour, c'est que celle-ci concerne uniquement de la mise à jour de documentation, de traduction ou de texte
 
+- Ajout de nouvelles cameras
+
 # 29/07/2026
 
 - Ajout de la possibilité de modifier le **mode d'enregistrement** sur les caméras G4 & G5, les valeurs suivantes sont possibles si supporté par votre installation: *Toujours*, *Jamais*, *Planification*, *Détections*, *Adaptatif*; voir documentation Ubiquiti pour les détails. Si vous avez d'autres modèles de caméras compatibles, faites un retour.
