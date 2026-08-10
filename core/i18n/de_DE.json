@@ -4,6 +4,10 @@
         "Aucune méthode correspondante à : ": "Keine Methode entsprechend:"
     },
     "plugins\/unifiprotect\/core\/class\/unifiprotect.class.php": {
+        "L’adresse du contrôleur UniFi Protect doit être configurée": "Die Adresse des UniFi-Protect-Controllers muss konfiguriert werden",
+        "La clé API UniFi Protect doit être configurée": "Der UniFi-Protect-API-Schlüssel muss konfiguriert werden",
+        "Impossible de se connecter à l’API officielle UniFi Protect": "Verbindung zur offiziellen UniFi-Protect-API nicht möglich",
+        "Réponse invalide de l’API officielle UniFi Protect": "Ungültige Antwort der offiziellen UniFi-Protect-API",
         "Cette commande ne peut être exécutée que sur un périphérique de type caméra": "Dieser Befehl kann nur auf einem Gerät vom Typ „Kamera“ ausgeführt werden",
         "Erreur sur la recuperation des informations de Unifi Protect": "Fehler beim Abrufen von Informationen von Unifi Protect",
         "Erreur sur la récupération des informations de Unifi Protect": "Fehler beim Abrufen der Informationen von Unifi Protect",
@@ -26,6 +30,7 @@
         "Valeur retour d\\'état": "Statusrückgabewert"
     },
     "plugins\/unifiprotect\/desktop\/php\/unifiprotect.php": {
+        "Model Key": "Modellschlüssel",
         "401 - Accès non autorisé": "401 - Unbefugter Zugriff",
         "Action": "Handlung",
         "Activer": "Aktivieren Sie",
@@ -63,6 +68,11 @@
         "Visible": "Sichtbar"
     },
     "plugins\/unifiprotect\/plugin_info\/configuration.php": {
+        "Contrôleur UniFi Protect": "UniFi-Protect-Controller",
+        "IP ou nom d’hôte du contrôleur": "IP oder Hostname des Controllers",
+        "Clé API UniFi Protect": "UniFi-Protect-API-Schlüssel",
+        "Saisir la clé API": "API-Schlüssel eingeben",
+        "Créez une clé depuis UniFi Site Manager, dans Paramètres → Clés API.": "Erstellen Sie einen Schlüssel im UniFi Site Manager unter Einstellungen → API-Schlüssel.",
         "Controleur Unifi protect": "Unifi Protect-Controller",
         "Découverte": "Entdeckung",
         "Fréquence de rafraîchissement": "Aktualisierungsrate",

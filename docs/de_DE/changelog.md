@@ -1,5 +1,10 @@
 # Changelog Ubiquiti Unifi Protect
 
+# 10.08.2026
+
+- Migration zur offiziellen UniFi Protect Integration API mit API-Schlüssel.
+- Nicht von der offiziellen API unterstützte Befehle wurden entfernt.
+
 # Changelog-Kamera
 
 >**WICHTIG**

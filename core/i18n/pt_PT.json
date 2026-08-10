@@ -4,6 +4,10 @@
         "Aucune méthode correspondante à : ": "Nenhum método correspondente a:"
     },
     "plugins\/unifiprotect\/core\/class\/unifiprotect.class.php": {
+        "L’adresse du contrôleur UniFi Protect doit être configurée": "O endereço do controlador UniFi Protect deve ser configurado",
+        "La clé API UniFi Protect doit être configurée": "A chave API do UniFi Protect deve ser configurada",
+        "Impossible de se connecter à l’API officielle UniFi Protect": "Não foi possível ligar à API oficial do UniFi Protect",
+        "Réponse invalide de l’API officielle UniFi Protect": "Resposta inválida da API oficial do UniFi Protect",
         "Cette commande ne peut être exécutée que sur un périphérique de type caméra": "Este comando só pode ser executado num dispositivo do tipo câmara",
         "Erreur sur la recuperation des informations de Unifi Protect": "Erro ao recuperar informações do Unifi Protect",
         "Erreur sur la récupération des informations de Unifi Protect": "Erro na recuperação das informações do Unifi Protect",
@@ -26,6 +30,7 @@
         "Valeur retour d\\'état": "Valor de retorno de status"
     },
     "plugins\/unifiprotect\/desktop\/php\/unifiprotect.php": {
+        "Model Key": "Chave do modelo",
         "401 - Accès non autorisé": "401 - Acesso não autorizado",
         "Action": "Açao",
         "Activer": "Ativar",
@@ -63,6 +68,11 @@
         "Visible": "Visível"
     },
     "plugins\/unifiprotect\/plugin_info\/configuration.php": {
+        "Contrôleur UniFi Protect": "Controlador UniFi Protect",
+        "IP ou nom d’hôte du contrôleur": "IP ou nome de anfitrião do controlador",
+        "Clé API UniFi Protect": "Chave API do UniFi Protect",
+        "Saisir la clé API": "Introduzir a chave API",
+        "Créez une clé depuis UniFi Site Manager, dans Paramètres → Clés API.": "Crie uma chave no UniFi Site Manager, em Definições → Chaves API.",
         "Controleur Unifi protect": "Controlador de proteção Unifi",
         "Découverte": "Descoberta",
         "Fréquence de rafraîchissement": "Taxa de atualização",

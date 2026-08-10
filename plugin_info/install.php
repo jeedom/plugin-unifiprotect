@@ -36,8 +36,26 @@ function unifiprotect_install() {
 function unifiprotect_update() {
     /** @var unifiprotect $eqLogic */
     foreach (eqLogic::byType('unifiprotect') as $eqLogic) {
-        $eqLogic->importConfig();
+		if ($eqLogic->getConfiguration('isNVR', false)) {
+			$type = 'nvr';
+		} elseif ($eqLogic->getConfiguration('isCamera', false)) {
+			$type = 'camera';
+		} elseif ($eqLogic->getConfiguration('isChime', false)) {
+			$type = 'chime';
+		} else {
+			continue;
+		}
+
+		$eqLogic->setConfiguration('type', $type);
+		$eqLogic->setConfiguration('applyType', '');
+		$eqLogic->save();
     }
+
+	// Credentials and options from the undocumented API must not be kept.
+	config::remove('controller_user', 'unifiprotect');
+	config::remove('controller_password', 'unifiprotect');
+	config::remove('site_id', 'unifiprotect');
+	config::remove('dontGetEvent', 'unifiprotect');
 }
 
 function unifiprotect_remove() {

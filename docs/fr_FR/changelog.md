@@ -1,5 +1,13 @@
 # Changelog Ubiquiti Unifi protect
 
+# 10/08/2026
+
+- Migration vers l’API d’intégration officielle UniFi Protect et authentification par clé API.
+- Validation des schémas de réponse pour le contrôleur, les caméras et les carillons.
+- Migration des snapshots vers l’endpoint officiel.
+- Retrait des commandes non disponibles dans l’API officielle : événements historiques, score, état et mode d’enregistrement, télémétrie NVR et notifications.
+- Remplacement des configurations matérielles par des profils génériques fondés sur les données réellement exposées par l’API.
+
 # Changelog Caméra
 
 >**IMPORTANT**

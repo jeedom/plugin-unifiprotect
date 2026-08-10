@@ -1,53 +1,24 @@
-# Plug-in Unifi Protect
+# Plugin UniFi Protect
 
-## Description
+## Descrição
 
-Plugin para conectar o Jeedom ao Unifi Protect
+Este plugin liga o Jeedom ao UniFi Protect através da API de integração oficial e de uma chave API. Descobre o controlador, as câmaras e as campainhas, apresenta o estado da ligação e fornece imagens das câmaras.
 
->**IMPORTANTE**
->
->Não há API oficial para Unifi proteger, o plugin pode, portanto, parar de funcionar durante a noite após uma atualização do Unifi proteger. Sob nenhuma circunstância a Jeedom pode ser responsabilizada e / ou ter o dever de corrigir
+## Configuração
 
-## Compatibilité
+1. Inicie sessão no [UniFi Site Manager](https://unifi.ui.com/).
+2. Abra **Definições → Chaves API**, crie uma chave e copie-a. A chave é apresentada apenas uma vez.
+3. Configure o endereço local do controlador, a porta HTTPS (normalmente `443`), a chave API e a frequência de atualização.
+4. Guarde e selecione **Procurar equipamentos UniFi Protect**.
 
-Você pode encontrar [aqui](https://compatibility.jeedom.com/index.php?v=d&p=home&plugin=unifiprotect) a lista de módulos compatíveis com o plugin
+A chave API substitui completamente o utilizador e a palavra-passe anteriores. Se o plugin Câmara estiver instalado, as câmaras Protect são criadas automaticamente nesse plugin.
 
-## Configuração de plug-in
+## Informações disponíveis
 
-Depois de instalar o plugin, você só precisa ativá-lo. Alguns parâmetros devem ser inseridos na configuração do plugin :
+- Controlador: estado da API, identificador e `modelKey`;
+- Câmara: ligação, estado oficial e imagem JPEG;
+- Campainha: ligação e estado oficial.
 
--   **Controlador de proteção Unifi** : Você tem que colocar o caminho para o seu controlador Unifi (apenas o IP na maioria dos casos)
--   **Unifi proteger usuário** : Indique aqui um nome de usuário local (o usuário pode ser "Administrador limitado" com "Somente visualização" no Unifi Protect) 
--   **Senha de proteção Unifi** : Digite a senha do usuário aqui
--   **Taxa de atualização** : Frequência de solicitações de informações para o controlador (quanto menor for, mais recursos ele consumirá nele, cuidado com aqueles no UDM-Pro)
--   **Não colete eventos** : Não recupera eventos das câmeras (permite consumir menos recursos, mas você perde a detecção de movimento / pessoa / carro /...)
--   **Encontre equipamentos de proteção Unifi** : Inicia a sincronização com Unifi Protect
+## Limitações
 
->**IMPORTANTE**
->
->Se você tiver o plugin de câmera instalado, o plugin Unifi Protect criará automaticamente as câmeras no plugin de câmera 
-
-## Feedback de informação
-
-### Controleur
-
-- Etat
-- Uptime
-- Visto pela última vez
-- SSH ativo (conexão SSH possível no controlador)
-- Erro de código
-- Utilização do CPU
-- Temperatura da CPU (se possível)
-- Uso de memória
-- Usando tmpfs
-- Uso de disco
-
-### Câmera 
-
-- Conectado
-- Etat
-- Visto pela última vez
-- Gravação (é a gravação da câmera)
-- Último evento
-- Data do último evento
-- Pontuação do último evento (se o evento for um evento inteligente)
+A API oficial não fornece atualmente telemetria detalhada do NVR, estado de gravação, controlo do modo de gravação ou histórico REST de eventos. Os comandos antigos correspondentes são removidos durante a atualização.

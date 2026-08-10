@@ -1,53 +1,24 @@
-# Unifi Protect-Plugin
+# UniFi-Protect-Plugin
 
-## Description
+## Beschreibung
 
-Plugin zum Verbinden von Jeedom mit Unifi Protect
-
->**WICHTIG**
->
->Es gibt keine offizielle API für Unifi Protect, das Plugin kann daher nach einem Update von Unifi Protect über Nacht nicht mehr funktionieren. Unter keinen Umständen kann Jeedom verantwortlich gemacht werden und / oder hat die Pflicht zur Korrektur
-
-## Compatibilité
-
-Sie finden [Hier](https://compatibility.jeedom.com/index.php?v=d&p=home&plugin=unifiprotect) die Liste der Module, die mit dem Plugin kompatibel sind
+Dieses Plugin verbindet Jeedom über die offizielle Integration API und einen API-Schlüssel mit UniFi Protect. Es erkennt Controller, Kameras und Klingeln, meldet deren Verbindungsstatus und stellt Kamera-Snapshots bereit.
 
 ## Plugin-Konfiguration
 
-Nach der Installation des Plugins müssen Sie es nur noch aktivieren. Einige Parameter müssen in der Plugin-Konfiguration eingegeben werden :
+1. Bei [UniFi Site Manager](https://unifi.ui.com/) anmelden.
+2. **Einstellungen → API-Schlüssel** öffnen, einen Schlüssel erstellen und kopieren. Er wird nur einmal angezeigt.
+3. Im Plugin die lokale Adresse des Controllers, den HTTPS-Port (normalerweise `443`), den API-Schlüssel und das Aktualisierungsintervall eintragen.
+4. Speichern und **UniFi-Protect-Geräte suchen** auswählen.
 
--   **Unifi Protect-Controller** : Sie müssen den Pfad zu Ihrem Unifi-Controller angeben (in den meisten Fällen nur die IP))
--   **Unifi-Benutzer schützen** : Geben Sie hier einen lokalen Benutzernamen an (der Benutzer kann "Limeted Admin" mit "View only" auf Unifi Protect sein) 
--   **Unifi-Schutz-Passwort** : Geben Sie hier das Passwort des Benutzers ein
--   **Aktualisierungsrate** : Häufigkeit von Informationsanfragen an den Controller (je niedriger, desto mehr Ressourcen werden benötigt, achten Sie auf die von UDM-Pro)
--   **Keine Ereignisse sammeln** : Rufen Sie keine Ereignisse von Kameras ab (ermöglicht den Verbrauch von weniger Ressourcen, aber Sie verlieren die Erkennung von Bewegungen / Personen / Autos /...)
--   **Unifi Protect-Geräte finden** : Startet die Synchronisierung mit Unifi Protect
+Der API-Schlüssel ersetzt den bisherigen Benutzernamen und das Passwort vollständig. Wenn das Kamera-Plugin installiert ist, werden Protect-Kameras automatisch darin angelegt.
 
->**WICHTIG**
->
->Wenn Sie das Kamera-Plugin installiert haben, erstellt das Unifi Protect-Plugin automatisch die Kameras im Kamera-Plugin 
+## Verfügbare Informationen
 
-## Informationsfeedback
+- Controller: API-Status, ID und `modelKey`;
+- Kamera: Verbindung, offizieller Status und JPEG-Snapshot;
+- Klingel: Verbindung und offizieller Status.
 
-### Controleur
+## Einschränkungen
 
-- Etat
-- Uptime
-- Zuletzt gesehen
-- SSH Active (SSH-Verbindung auf dem Controller möglich)
-- Code Fehler
-- CPU auslastung
-- CPU-Temperatur (wenn möglich)
-- Speichernutzung
-- Tmpfs verwenden
-- Festplattennutzung
-
-### Kamera 
-
-- In Verbindung gebracht
-- Etat
-- Zuletzt gesehen
-- Aufnahme (ist die Kameraaufnahme)
-- Letzte Veranstaltung
-- Datum der letzten Veranstaltung
-- Letzter Event-Score (wenn das Event ein Smart Event ist)
+Die offizielle API liefert derzeit keine detaillierte NVR-Telemetrie, keinen Aufnahmestatus, keine Steuerung des Aufnahmemodus und keinen REST-Ereignisverlauf. Die entsprechenden alten Befehle werden beim Update entfernt.

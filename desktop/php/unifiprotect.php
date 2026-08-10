@@ -142,18 +142,12 @@ $eqLogics = eqLogic::byType($plugin->getId());
 						</div>
 
 						<!-- Partie droite de l'onglet "Équipement" -->
-						<!-- Affiche l'icône du plugin par défaut mais vous pouvez y afficher les informations de votre choix -->
+						<!-- Informations fournies par l'API officielle UniFi Protect -->
 						<div class="col-lg-6">
 							<legend><i class="fas fa-info"></i> {{Informations}}</legend>
 							<div class="col-sm-6">
 								<form class="form-horizontal">
 									<fieldset>
-										<div class="form-group">
-											<label class="col-sm-4 control-label">{{IP}}</label>
-											<div class="col-sm-8">
-												<span class="eqLogicAttr label label-default" data-l1key="configuration" data-l2key="ip"></span>
-											</div>
-										</div>
 										<div class="form-group">
 											<label class="col-sm-4 control-label">{{Device ID}}</label>
 											<div class="col-sm-8">
@@ -161,22 +155,14 @@ $eqLogics = eqLogic::byType($plugin->getId());
 											</div>
 										</div>
 										<div class="form-group">
-											<label class="col-sm-4 control-label">{{Firmware}}</label>
+											<label class="col-sm-4 control-label">{{Model Key}}</label>
 											<div class="col-sm-8">
-												<span class="eqLogicAttr label label-default" data-l1key="configuration" data-l2key="firmware"></span>
-											</div>
-										</div>
-										<div class="form-group">
-											<label class="col-sm-4 control-label">{{Hardware/Version}}</label>
-											<div class="col-sm-8">
-												<span class="eqLogicAttr label label-default" data-l1key="configuration" data-l2key="hardware"></span>
+												<span class="eqLogicAttr label label-default" data-l1key="configuration" data-l2key="model_key"></span>
 											</div>
 										</div>
 									</fieldset>
 								</form>
-								<center>
-									<img src="<?php echo $plugin->getPathImgIcon(); ?>" id="img_unifiProtectModel" style="height : 250px;margin-top : 60px" />
-								</center>
+								<center><img src="<?php echo $plugin->getPathImgIcon(); ?>" style="height : 250px;margin-top : 60px" /></center>
 							</div>
 						</div>
 					</fieldset>

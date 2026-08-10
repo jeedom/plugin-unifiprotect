@@ -29,33 +29,26 @@ if (!isConnect()) {
 			<i class="fa fa-list-alt"></i> {{Unifi}}
 		</legend>
 		<div class="form-group">
-			<label class="col-lg-3 control-label">{{Controleur Unifi protect}}</label>
+			<label class="col-lg-3 control-label">{{Contrôleur UniFi Protect}}</label>
 			<div class="col-lg-5">
 				<div class="input-group">
 					<span class="input-group-addon roundedLeft">https://</span>
-					<input type="text" class="configKey form-control" data-l1key="controller_ip" placeholder="{{IP du controleur}}" />
+					<input type="text" class="configKey form-control" data-l1key="controller_ip" placeholder="{{IP ou nom d’hôte du contrôleur}}" />
 					<span class="input-group-addon">:</span>
-					<input type="text" class="configKey form-control" data-l1key="controller_port" placeholder="443" />
-					<span class="input-group-addon">/</span>
-					<input type="text" class="configKey form-control roundedRight" data-l1key="site_id" placeholder="" />
+					<input type="text" class="configKey form-control roundedRight" data-l1key="controller_port" placeholder="443" />
 				</div>
 			</div>
 		</div>
 		<div class="form-group">
-			<label class="col-lg-3 control-label">{{Utilisateur Unifi protect}}</label>
-			<div class="col-lg-5">
-				<input class="configKey form-control" data-l1key="controller_user" placeholder="{{Utilisateur}}" />
-			</div>
-		</div>
-		<div class="form-group">
-			<label class="col-lg-3 control-label">{{Mot de passe Unifi protect}}</label>
+			<label class="col-lg-3 control-label">{{Clé API UniFi Protect}}</label>
 			<div class="col-lg-5">
 				<div class="input-group">
-					<input type="text" class="configKey form-control roundedLeft inputPassword" data-l1key="controller_password" placeholder="{{Saisir le mot de passe}}" autocomplete="off" />
+					<input type="password" class="configKey form-control roundedLeft inputPassword" data-l1key="controller_api_key" placeholder="{{Saisir la clé API}}" autocomplete="new-password" />
 					<span class="input-group-btn">
 						<a class="btn btn-default form-control bt_showPass roundedRight"><i class="fas fa-eye"></i></a>
 					</span>
 				</div>
+				<span class="help-block">{{Créez une clé depuis UniFi Site Manager, dans Paramètres → Clés API.}}</span>
 			</div>
 		</div>
 		<div class="form-group">
@@ -76,12 +69,6 @@ if (!isConnect()) {
 					<input class="configKey form-control roundedLeft" data-l1key="DeamonSleepTime" placeholder="3" />
 					<span class="input-group-addon roundedRight">{{secondes}}</span>
 				</div>
-			</div>
-		</div>
-		<div class="form-group">
-			<label class="col-lg-3 control-label">{{Ne pas récuperer les évenements}}</label>
-			<div class="col-lg-5">
-				<input type="checkbox" class="configKey" data-l1key="dontGetEvent" />
 			</div>
 		</div>
 	</fieldset>
