@@ -278,6 +278,13 @@ class unifiprotect extends eqLogic {
 			throw new Exception(__('Impossible de se connecter sur Unifi protect', __FILE__));
 		}
 		$server_info = $controller->get_server_info();
+		if ($server_info === false) {
+			$maxDelay = min(3000000, (float) config::byKey('DeamonSleepTime', 'unifiprotect', 3) * 1000000);
+			if ($maxDelay >= 500000) {
+				usleep(rand(500000, (int) $maxDelay));
+				$server_info = $controller->get_server_info();
+			}
+		}
 		if (!is_array($server_info) || !isset($server_info['nvr'])) {
 			foreach ($eqLogics as $eqLogic) {
 				$eqLogic->checkAndUpdateCmd('state', 0);
