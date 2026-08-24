@@ -34,6 +34,10 @@ function unifiprotect_install() {
 }
 
 function unifiprotect_update() {
+    /** @var unifiprotect $eqLogic */
+    foreach (eqLogic::byType('unifiprotect') as $eqLogic) {
+        $eqLogic->importConfig();
+    }
 }
 
 function unifiprotect_remove() {
