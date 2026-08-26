@@ -1,5 +1,10 @@
 # Registro de cambios Ubiquiti Unifi protect
 
+# 10/08/2026
+
+- Migración a la API de integración oficial de UniFi Protect con clave API.
+- Se eliminaron los comandos no disponibles en la API oficial.
+
 # Cámara de registro de cambios
 
 >**IMPORTANTE**

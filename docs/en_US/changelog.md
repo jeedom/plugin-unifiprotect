@@ -1,5 +1,13 @@
 # Changelog Ubiquiti Unifi protect
 
+# 2026-08-10
+
+- Migrated to the official UniFi Protect Integration API and API-key authentication.
+- Added response-schema validation for the controller, cameras, and chimes.
+- Migrated snapshots to the official endpoint.
+- Removed commands unavailable in the official API: event history and score, recording state and mode, NVR telemetry, and notifications.
+- Replaced hardware-specific configurations with generic profiles based on data exposed by the official API.
+
 # Changelog Camera
 
 >**IMPORTANT**

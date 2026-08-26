@@ -4,6 +4,10 @@
         "Aucune méthode correspondante à : ": "No method corresponding to:"
     },
     "plugins\/unifiprotect\/core\/class\/unifiprotect.class.php": {
+        "L’adresse du contrôleur UniFi Protect doit être configurée": "The UniFi Protect controller address must be configured",
+        "La clé API UniFi Protect doit être configurée": "The UniFi Protect API key must be configured",
+        "Impossible de se connecter à l’API officielle UniFi Protect": "Unable to connect to the official UniFi Protect API",
+        "Réponse invalide de l’API officielle UniFi Protect": "Invalid response from the official UniFi Protect API",
         "Cette commande ne peut être exécutée que sur un périphérique de type caméra": "This command can only be executed on a camera-type device",
         "Erreur sur la recuperation des informations de Unifi Protect": "Error retrieving information from Unifi Protect",
         "Erreur sur la récupération des informations de Unifi Protect": "Error retrieving information from Unifi Protect",
@@ -26,6 +30,7 @@
         "Valeur retour d\\'état": "Status return value"
     },
     "plugins\/unifiprotect\/desktop\/php\/unifiprotect.php": {
+        "Model Key": "Model Key",
         "401 - Accès non autorisé": "401 - Unauthorized Access",
         "Action": "Stock",
         "Activer": "Activate",
@@ -63,6 +68,11 @@
         "Visible": "Visible"
     },
     "plugins\/unifiprotect\/plugin_info\/configuration.php": {
+        "Contrôleur UniFi Protect": "UniFi Protect controller",
+        "IP ou nom d’hôte du contrôleur": "Controller IP or hostname",
+        "Clé API UniFi Protect": "UniFi Protect API key",
+        "Saisir la clé API": "Enter the API key",
+        "Créez une clé depuis UniFi Site Manager, dans Paramètres → Clés API.": "Create a key in UniFi Site Manager under Settings → API Keys.",
         "Controleur Unifi protect": "Unifi protect controller",
         "Découverte": "Discovery",
         "Fréquence de rafraîchissement": "Refresh rate",

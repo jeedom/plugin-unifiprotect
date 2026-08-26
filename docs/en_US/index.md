@@ -1,53 +1,45 @@
-# Unifi Protect plugin
+# UniFi Protect plugin
 
 ## Description
 
-Plugin to connect Jeedom to Unifi Protect
+This plugin connects Jeedom to UniFi Protect through the official Integration API and an API key. It discovers the controller, cameras and chimes, reports their connection state, and provides camera snapshots.
 
->**IMPORTANT**
->
->There is no official API for Unifi protect the plugin can therefore stop working overnight following an update of Unifi protect. Under no circumstances can Jeedom be held responsible and / or have the duty to correct
+## Compatibility
 
-## Compatibilité
-
-You can find [here](https://compatibility.jeedom.com/index.php?v=d&p=home&plugin=unifiprotect) the list of modules compatible with the plugin
+The controller must run a UniFi Protect version exposing the official `/proxy/protect/integration/v1` API. See the [tested equipment list](https://compatibility.jeedom.com/index.php?v=d&p=home&plugin=unifiprotect).
 
 ## Plugin configuration
 
-After installing the plugin, you just need to activate it. Some parameters must be entered in the plugin configuration :
+1. Sign in to [UniFi Site Manager](https://unifi.ui.com/).
+2. Open **Settings → API Keys**, create a key and copy it. The key is displayed only once.
+3. Configure the plugin with:
+   - **UniFi Protect controller**: the controller local IP address or hostname and HTTPS port, usually `443`;
+   - **UniFi Protect API key**: the key created in UniFi Site Manager;
+   - **Refresh rate**: the interval between device-state requests.
+4. Save, then click **Find UniFi Protect equipment**.
 
--   **Unifi protect controller** : You have to put the path to your Unifi controller (just the IP in most cases)
--   **Unifi protect user** : Indicate here a local user name (the user can be "Limeted Admin" with "View only" on Unifi Protect) 
--   **Unifi protect password** : Enter the user's password here
--   **Refresh rate** : Frequency of information requests to the controller (the lower it is, the more resources it will consume on it, beware of those on UDM-Pro)
--   **Do not collect events** : Do not recover the events from the cameras (allows to consume less resources but you lose the detection of movement / person / car /...)
--   **Find Unifi protect equipment** : Starts synchronization with Unifi Protect
+The API key fully replaces the former username and password. After upgrading the plugin, a key must be configured before synchronization can run again.
 
->**IMPORTANT**
->
->If you have the camera plugin installed the Unifi Protect plugin will automatically create the cameras in the camera plugin 
+If the Camera plugin is installed, Protect cameras are automatically created in it so their snapshots are available.
 
-## Information feedback
+## Available information
 
-### Controleur
+### Controller
 
-- Etat
-- Uptime
-- Last seen
-- SSH Active (SSH connection possible on the controller)
-- Code error
-- CPU usage
-- CPU temperature (If possible)
-- Memory usage
-- Using tmpfs
-- Disk usage
+- API availability state;
+- official id and `modelKey`.
 
-### Camera 
+### Camera
 
-- Connected
-- Etat
-- Last seen
-- Recording (is the camera recording)
-- Last event
-- Last event date
-- Last event score (if the event is a smart event)
+- connection state;
+- official state (`CONNECTED`, `CONNECTING`, or `DISCONNECTED`);
+- high-quality JPEG snapshot.
+
+### Chime
+
+- connection state;
+- official state.
+
+## Official API limitations
+
+The official API does not currently provide detailed NVR telemetry, recording state, recording-mode control, or a REST event history. The former commands for these features are therefore removed when the plugin is upgraded.

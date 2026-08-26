@@ -23,7 +23,7 @@ class unifiprotect extends eqLogic {
 	/***************************Attributs*******************************/
 	/** @var \unifiprotectapi */
 	private static $_unifiprotectController = null;
-	public static $_encryptConfigKey = array('controller_ip', 'controller_user', 'controller_password');
+	public static $_encryptConfigKey = array('controller_api_key');
 
 	public static function cronDaily() {
 		self::deamon_start();
@@ -39,6 +39,13 @@ class unifiprotect extends eqLogic {
 			$return['state'] = 'ok';
 		}
 		$return['launchable'] = 'ok';
+		if (trim(config::byKey('controller_ip', 'unifiprotect', '', true)) === '') {
+			$return['launchable'] = 'nok';
+			$return['launchable_message'] = __('L’adresse du contrôleur UniFi Protect doit être configurée', __FILE__);
+		} elseif (trim(config::byKey('controller_api_key', 'unifiprotect', '', true)) === '') {
+			$return['launchable'] = 'nok';
+			$return['launchable_message'] = __('La clé API UniFi Protect doit être configurée', __FILE__);
+		}
 		return $return;
 	}
 
@@ -129,23 +136,23 @@ class unifiprotect extends eqLogic {
 	}
 
 	public static function login() {
-		$controller_user = config::byKey('controller_user', 'unifiprotect', '', true);
-		$controller_password = config::byKey('controller_password', 'unifiprotect', '', true);
+		$controller_api_key = config::byKey('controller_api_key', 'unifiprotect', '', true);
 		$controller_url = 'https://' . config::byKey('controller_ip', 'unifiprotect', '', true) . ':' . config::byKey('controller_port', 'unifiprotect', '443', true);
-		$site_id = config::byKey('site_id', 'unifiprotect', 'default', true);
-		if ($site_id == '') {
-			$site_id = 'default';
-		}
 		if (self::$_unifiprotectController === null) {
-			self::$_unifiprotectController = new unifiprotectapi($controller_user, $controller_password, $controller_url, $site_id);
+			try {
+				self::$_unifiprotectController = new unifiprotectapi($controller_api_key, $controller_url);
+			} catch (Exception $e) {
+				log::add('unifiprotect', 'error', $e->getMessage());
+				return false;
+			}
 		}
 		if (is_object(self::$_unifiprotectController)) {
 			$login = self::$_unifiprotectController->login();
 			if ($login !== true) {
 				if (is_int($login)) {
-					log::add('unifiprotect', 'warning', "Erreur d'accès à Unifi Protect, vérifiez le nom d'utilisateur et mot de passe (HTTP code: $login): " . self::$_unifiprotectController->get_last_error_message());
+					log::add('unifiprotect', 'warning', "Erreur d'accès à l'API officielle UniFi Protect, vérifiez la clé API (HTTP code: $login): " . self::$_unifiprotectController->get_last_error_message());
 				} else {
-					log::add('unifiprotect', 'warning', "Erreur d'accès à Unifi Protect, vérifiez qu'il répond: " . self::$_unifiprotectController->get_last_error_message());
+					log::add('unifiprotect', 'warning', "Erreur d'accès à l'API officielle UniFi Protect: " . self::$_unifiprotectController->get_last_error_message());
 				}
 				return false;
 			}
@@ -159,43 +166,36 @@ class unifiprotect extends eqLogic {
 	public static function sync() {
 		$controller = self::getController();
 		if ($controller  === false) {
-			throw new Exception(__('Impossible de se connecter sur Unifi protect', __FILE__));
+			throw new Exception(__('Impossible de se connecter à l’API officielle UniFi Protect', __FILE__));
 		}
 		$datas = $controller->get_server_info();
-		if (!is_array($datas) || !isset($datas['nvr'])) {
-			sleep(1);
-			$datas = $controller->get_server_info();
-		}
-		if (!is_array($datas) || !isset($datas['nvr'])) {
-			sleep(5);
-			$datas = $controller->get_server_info();
-		}
-		if (!is_array($datas) || !isset($datas['nvr'])) {
-			throw new Exception(__('Erreur sur la recuperation des informations de Unifi Protect', __FILE__) . ' => ' . json_encode($datas));
+		if (!is_array($datas) || !isset($datas['nvr'], $datas['cameras'], $datas['chimes'])) {
+			throw new Exception(__('Réponse invalide de l’API officielle UniFi Protect', __FILE__) . ' : ' . $controller->get_last_error_message());
 		}
 		log::add('unifiprotect', 'info', "Sync data : " . json_encode($datas));
-		log::add('unifiprotect', 'info', "Find NVR " . $datas['nvr']['name'] . "(" . $datas['nvr']['mac'] . ")(" . $datas['nvr']['type'] . "):" . json_encode($datas['nvr']));
-		$eqLogic = self::byLogicalId($datas['nvr']['mac'], 'unifiprotect');
+
+		$nvr = $datas['nvr'];
+		log::add('unifiprotect', 'info', "Find NVR " . $nvr['name'] . " (" . $nvr['id'] . ")");
+		$eqLogic = self::findEquipment($nvr, 'nvr');
 		if (!is_object($eqLogic)) {
 			$eqLogic = new unifiprotect();
-			$eqLogic->setName($datas['nvr']['name']);
+			$eqLogic->setName($nvr['name']);
 			$eqLogic->setIsEnable(1);
 			$eqLogic->setIsVisible(1);
-			$eqLogic->setLogicalId($datas['nvr']['mac']);
+			$eqLogic->setLogicalId('nvr::' . $nvr['id']);
 			$eqLogic->setEqType_name('unifiprotect');
 		}
-		$eqLogic->setConfiguration('type', $datas['nvr']['type']);
+		$eqLogic->setConfiguration('type', 'nvr');
 		$eqLogic->setConfiguration('isNVR', true);
-		$eqLogic->setConfiguration('serial', $datas['nvr']['hardwareId']);
-		$eqLogic->setConfiguration('device_id', $datas['nvr']['id']);
-		$eqLogic->setConfiguration('mac', $datas['nvr']['mac']);
-		$eqLogic->setConfiguration('ip', $datas['nvr']['host']);
-		$eqLogic->setConfiguration('hardware', $datas['nvr']['version']);
-		$eqLogic->setConfiguration('firmware', $datas['nvr']['firmwareVersion']);
+		$eqLogic->setConfiguration('isCamera', false);
+		$eqLogic->setConfiguration('isChime', false);
+		$eqLogic->setConfiguration('device_id', $nvr['id']);
+		$eqLogic->setConfiguration('model_key', $nvr['modelKey']);
 		$eqLogic->save();
+
 		foreach ($datas['cameras'] as $camera) {
-			log::add('unifiprotect', 'info', "Find camera " . $camera['name'] . "(" . $camera['mac'] . ")(" . $camera['type'] . "):" . json_encode($camera));
-			$eqLogic = self::byLogicalId($camera['mac'], 'unifiprotect');
+			log::add('unifiprotect', 'info', "Find camera " . $camera['name'] . " (" . $camera['mac'] . ")");
+			$eqLogic = self::findEquipment($camera, 'camera');
 			if (!is_object($eqLogic)) {
 				$eqLogic = new unifiprotect();
 				$eqLogic->setName($camera['name']);
@@ -204,14 +204,15 @@ class unifiprotect extends eqLogic {
 				$eqLogic->setLogicalId($camera['mac']);
 				$eqLogic->setEqType_name('unifiprotect');
 			}
-			$eqLogic->setConfiguration('type', $camera['type']);
+			$eqLogic->setConfiguration('type', 'camera');
+			$eqLogic->setConfiguration('isNVR', false);
 			$eqLogic->setConfiguration('isCamera', true);
+			$eqLogic->setConfiguration('isChime', false);
 			$eqLogic->setConfiguration('device_id', $camera['id']);
 			$eqLogic->setConfiguration('mac', $camera['mac']);
-			$eqLogic->setConfiguration('ip', $camera['host']);
-			$eqLogic->setConfiguration('hardware', $camera['hardwareRevision']);
-			$eqLogic->setConfiguration('firmware', $camera['firmwareVersion']);
+			$eqLogic->setConfiguration('model_key', $camera['modelKey']);
 			$eqLogic->save();
+
 			if (class_exists('camera')) {
 				$camera_jeedom = eqLogic::byLogicalId($camera['id'], 'camera');
 				if (!is_object($camera_jeedom)) {
@@ -220,23 +221,17 @@ class unifiprotect extends eqLogic {
 					$camera_jeedom->setIsVisible(1);
 					$camera_jeedom->setName($camera['name']);
 				}
-				$type = $camera['type'];
-				if ($type == 'UVC G4 Bullet') {
-					$type = 'g4_bullet';
-				}
-				$camera_jeedom->setConfiguration('device', 'ubiquiti.' . $type);
 				$camera_jeedom->setConfiguration('ip', $camera['id']);
 				$camera_jeedom->setConfiguration('urlStream', 'unifiprotect::get_snapshot');
 				$camera_jeedom->setEqType_name('camera');
 				$camera_jeedom->setLogicalId($camera['id']);
-				$camera_jeedom->save();
-				$camera_jeedom->setConfiguration('urlStream', 'unifiprotect::get_snapshot');
 				$camera_jeedom->save(true);
 			}
 		}
+
 		foreach ($datas['chimes'] as $chime) {
-			log::add('unifiprotect', 'info', "Find chime " . $chime['name'] . "(" . $chime['mac'] . ")(" . $chime['type'] . "):" . json_encode($chime));
-			$eqLogic = self::byLogicalId($chime['mac'], 'unifiprotect');
+			log::add('unifiprotect', 'info', "Find chime " . $chime['name'] . " (" . $chime['mac'] . ")");
+			$eqLogic = self::findEquipment($chime, 'chime');
 			if (!is_object($eqLogic)) {
 				$eqLogic = new unifiprotect();
 				$eqLogic->setName($chime['name']);
@@ -245,26 +240,35 @@ class unifiprotect extends eqLogic {
 				$eqLogic->setLogicalId($chime['mac']);
 				$eqLogic->setEqType_name('unifiprotect');
 			}
-			$eqLogic->setConfiguration('type', $chime['type']);
+			$eqLogic->setConfiguration('type', 'chime');
+			$eqLogic->setConfiguration('isNVR', false);
+			$eqLogic->setConfiguration('isCamera', false);
 			$eqLogic->setConfiguration('isChime', true);
 			$eqLogic->setConfiguration('device_id', $chime['id']);
 			$eqLogic->setConfiguration('mac', $chime['mac']);
-			$eqLogic->setConfiguration('ip', $chime['host']);
-			$eqLogic->setConfiguration('firmware', $chime['firmwareVersion']);
+			$eqLogic->setConfiguration('model_key', $chime['modelKey']);
 			$eqLogic->save();
 		}
 		self::pull();
 	}
 
-	private static function secondsToTime(float $ss) {
-		$s = $ss % 60;
-		$m = floor(($ss % 3600) / 60);
-		$h = floor(($ss % 86400) / 3600);
-		$d = floor(($ss) / 86400);
-		if ($d)
-			return sprintf("%d.%02d:%02d:%02d", $d, $h, $m, $s);
-		else
-			return sprintf("%02d:%02d:%02d", $h, $m, $s);
+	private static function findEquipment($device, $kind) {
+		if (isset($device['mac']) && $device['mac'] !== '') {
+			$eqLogic = self::byLogicalId($device['mac'], 'unifiprotect');
+			if (is_object($eqLogic)) {
+				return $eqLogic;
+			}
+		}
+
+		foreach (self::byType('unifiprotect') as $eqLogic) {
+			if ($eqLogic->getConfiguration('device_id') == $device['id']) {
+				return $eqLogic;
+			}
+			if ($kind === 'nvr' && $eqLogic->getConfiguration('isNVR', false)) {
+				return $eqLogic;
+			}
+		}
+		return null;
 	}
 
 	public static function pull() {
@@ -273,123 +277,57 @@ class unifiprotect extends eqLogic {
 		$controller = self::getController();
 		if ($controller  === false) {
 			foreach ($eqLogics as $eqLogic) {
-				$eqLogic->checkAndUpdateCmd('state', 0);
+				$eqLogic->checkAndUpdateCmd('state', $eqLogic->getConfiguration('isNVR', false) ? 0 : 'DISCONNECTED');
+				$eqLogic->checkAndUpdateCmd('isConnected', 0);
 			}
-			throw new Exception(__('Impossible de se connecter sur Unifi protect', __FILE__));
+			throw new Exception(__('Impossible de se connecter à l’API officielle UniFi Protect', __FILE__));
 		}
 		$server_info = $controller->get_server_info();
-		if (!is_array($server_info) || !isset($server_info['nvr'])) {
+		if (!is_array($server_info) || !isset($server_info['nvr'], $server_info['cameras'], $server_info['chimes'])) {
 			foreach ($eqLogics as $eqLogic) {
-				$eqLogic->checkAndUpdateCmd('state', 0);
+				$eqLogic->checkAndUpdateCmd('state', $eqLogic->getConfiguration('isNVR', false) ? 0 : 'DISCONNECTED');
+				$eqLogic->checkAndUpdateCmd('isConnected', 0);
 			}
-			throw new Exception(__('Erreur sur la récupération des informations de Unifi Protect', __FILE__) . ' => ' . json_encode($server_info));
+			throw new Exception(__('Réponse invalide de l’API officielle UniFi Protect', __FILE__) . ' : ' . $controller->get_last_error_message());
 		}
 		log::add('unifiprotect', 'debug', "Pull data : " . json_encode($server_info));
 		foreach ($eqLogics as $eqLogic) {
 			$datas = null;
 			if ($eqLogic->getConfiguration('isCamera', false)) {
 				foreach ($server_info['cameras'] as $camera) {
-					if ($camera['mac'] == $eqLogic->getLogicalId()) {
+					if ($camera['id'] == $eqLogic->getConfiguration('device_id')) {
 						$datas = $camera;
+						break;
 					}
 				}
 			} else if ($eqLogic->getConfiguration('isChime', false)) {
 				foreach ($server_info['chimes'] as $chime) {
-					if ($chime['mac'] == $eqLogic->getLogicalId()) {
+					if ($chime['id'] == $eqLogic->getConfiguration('device_id')) {
 						$datas = $chime;
+						break;
 					}
 				}
 			} else {
-				$datas = $server_info;
+				$datas = $server_info['nvr'];
 			}
 			if ($datas == null) {
+				$eqLogic->checkAndUpdateCmd('state', 'DISCONNECTED');
+				$eqLogic->checkAndUpdateCmd('isConnected', 0);
 				continue;
 			}
 			$eqLogic->update_cmds($datas);
-		}
-		if (!config::byKey('dontGetEvent', 'unifiprotect', false)) {
-			$raw_events = $controller->get_raw_events(strtotime('now -' . (10 * config::byKey('DeamonSleepTime', 'unifiprotect', 3, true)) . ' seconds') * 1000, strtotime('now +10min') * 1000);
-			log::add('unifiprotect', 'debug', json_encode($raw_events));
-			$events = array();
-			foreach ($raw_events as $raw_event) {
-				if (!isset($raw_event['camera']) || $raw_event['camera'] == '') {
-					continue;
-				}
-				if (!isset($raw_event['start']) || $raw_event['start'] == '') {
-					continue;
-				}
-				if (!isset($events[$raw_event['camera']])) {
-					$events[$raw_event['camera']] = $raw_event;
-				} elseif ($events[$raw_event['camera']]['start'] < $raw_event['start']) {
-					$events[$raw_event['camera']] = $raw_event;
-				}
-			}
-			foreach ($events as &$event) {
-				if ($event['type'] == 'smartDetectZone' && isset($event['smartDetectTypes']) && isset($event['smartDetectTypes'][0])) {
-					$event['type'] = $event['smartDetectTypes'][0];
-				}
-			}
-
-			foreach ($eqLogics as $eqLogic) {
-				if (!$eqLogic->getConfiguration('isCamera', false)) {
-					continue;
-				}
-				if (!isset($events[$eqLogic->getConfiguration('device_id')])) {
-					continue;
-				}
-				$found_event = $events[$eqLogic->getConfiguration('device_id')];
-				if ($eqLogic->getCache('event::lastId') == $found_event['id']) {
-					continue;
-				}
-				$eqLogic->checkAndUpdateCmd('event::lastDate', date('Y-m-d H:i:s', $found_event['start'] / 1000));
-				$eqLogic->checkAndUpdateCmd('event::last', $found_event['type']);
-				if (isset($found_event['score'])) {
-					$eqLogic->checkAndUpdateCmd('event::lastScore', $found_event['score']);
-				} else {
-					$eqLogic->checkAndUpdateCmd('event::lastScore', '');
-				}
-				$eqLogic->setCache('event::lastId', $found_event['id']);
-			}
 		}
 	}
 
 	public function update_cmds($datas) {
 		foreach ($this->getCmd('info') as $cmd) {
-			if ($this->getConfiguration('isNVR', false)) {
-				if ($cmd->getLogicalId() == 'state') {
-					$this->checkAndUpdateCmd($cmd, 1);
-					continue;
-				}
-				if ($cmd->getLogicalId() == 'memory_used') {
-					if (isset($datas['nvr']) && isset($datas['nvr']['systemInfo']) && isset($datas['nvr']['systemInfo']['memory'])) {
-						$value = ($datas['nvr']['systemInfo']['memory']['total'] - $datas['nvr']['systemInfo']['memory']['available']) / $datas['nvr']['systemInfo']['memory']['total'];
-						$this->checkAndUpdateCmd($cmd, round($value * 100, 2));
-					}
-					continue;
-				}
-				if ($cmd->getLogicalId() == 'tmpfs_used') {
-					if (isset($datas['nvr']) && isset($datas['nvr']['systemInfo']) && isset($datas['nvr']['systemInfo']['tmpfs'])) {
-						$value = ($datas['nvr']['systemInfo']['tmpfs']['total'] - $datas['nvr']['systemInfo']['tmpfs']['available']) / $datas['nvr']['systemInfo']['tmpfs']['total'];
-						$this->checkAndUpdateCmd($cmd, round($value * 100, 2));
-					}
-					continue;
-				}
-			}
-
 			$paths = explode('::', $cmd->getLogicalId());
 			$value = $datas;
 			foreach ($paths as $key) {
-				if (!isset($value[$key])) {
+				if (!is_array($value) || !array_key_exists($key, $value)) {
 					continue 2;
 				}
 				$value = $value[$key];
-			}
-			$lastSegment = end($paths);
-			if (in_array($lastSegment, array('lastSeen', 'lastMotion', 'lastRing'))) {
-				$value = date('Y-m-d H:i:s', $value / 1000);
-			}
-			if ($cmd->getLogicalId() == 'nvr::uptime') {
-				$value = self::secondsToTime($value / 1000);
 			}
 			$this->checkAndUpdateCmd($cmd, $value);
 		}
@@ -400,10 +338,15 @@ class unifiprotect extends eqLogic {
 		if (!is_object($controller)) {
 			return null;
 		}
-		if ($_eqLogic->getEqType_name() == 'camera') {
-			return $controller->get_snapshot($_eqLogic->getConfiguration('ip'));
+		$camera_id = $_eqLogic->getEqType_name() == 'camera'
+			? $_eqLogic->getConfiguration('ip')
+			: $_eqLogic->getConfiguration('device_id');
+		$snapshot = $controller->get_snapshot($camera_id);
+		if ($snapshot === false) {
+			log::add('unifiprotect', 'error', 'Erreur de récupération du snapshot : ' . $controller->get_last_error_message());
+			return null;
 		}
-		return $controller->get_snapshot($_eqLogic->getConfiguration('device_id'));
+		return $snapshot;
 	}
 
 
@@ -462,28 +405,6 @@ class unifiprotectCmd extends cmd {
 		if ($this->getType() == 'info') {
 			return;
 		}
-		if ($this->getLogicalId() == 'setNotification') {
-			$controller = unifiprotect::getController();
-			$controller->set_notification($_options['title'], $_options['message']);
-			return;
-		}
-
-		if ($this->getLogicalId() == 'setRecordingMode') {
-			/** @var unifiprotect $eqLogic */
-			$eqLogic = $this->getEqLogic();
-			if (!$eqLogic->getConfiguration('isCamera', false)) {
-				throw new Exception(__('Cette commande ne peut être exécutée que sur un périphérique de type caméra', __FILE__));
-			}
-			$camera_id = $eqLogic->getConfiguration('device_id');
-
-			$controller = unifiprotect::getController();
-			log::add('unifiprotect', 'info', "Set recording mode for camera $camera_id to " . $_options['select']);
-			$result = $controller->set_recording_mode($camera_id, $_options['select']);
-			log::add('unifiprotect', 'debug', "Result: " . json_encode($result));
-			$eqLogic->update_cmds($result);
-			return;
-		}
-
 		unifiprotect::pull();
 	}
 

@@ -4,6 +4,10 @@
         "Aucune méthode correspondante à : ": "Ningún método correspondiente a:"
     },
     "plugins\/unifiprotect\/core\/class\/unifiprotect.class.php": {
+        "L’adresse du contrôleur UniFi Protect doit être configurée": "Debe configurar la dirección del controlador UniFi Protect",
+        "La clé API UniFi Protect doit être configurée": "Debe configurar la clave API de UniFi Protect",
+        "Impossible de se connecter à l’API officielle UniFi Protect": "No se puede conectar con la API oficial de UniFi Protect",
+        "Réponse invalide de l’API officielle UniFi Protect": "Respuesta no válida de la API oficial de UniFi Protect",
         "Cette commande ne peut être exécutée que sur un périphérique de type caméra": "Este comando solo se puede ejecutar en un dispositivo de tipo cámara",
         "Erreur sur la recuperation des informations de Unifi Protect": "Error al recuperar información de Unifi Protect",
         "Erreur sur la récupération des informations de Unifi Protect": "Error al recuperar la información de Unifi Protect",
@@ -26,6 +30,7 @@
         "Valeur retour d\\'état": "Valor de retorno de estado"
     },
     "plugins\/unifiprotect\/desktop\/php\/unifiprotect.php": {
+        "Model Key": "Clave de modelo",
         "401 - Accès non autorisé": "401 - Acceso no autorizado",
         "Action": "Acción",
         "Activer": "Activar",
@@ -63,6 +68,11 @@
         "Visible": "Visible"
     },
     "plugins\/unifiprotect\/plugin_info\/configuration.php": {
+        "Contrôleur UniFi Protect": "Controlador UniFi Protect",
+        "IP ou nom d’hôte du contrôleur": "IP o nombre de host del controlador",
+        "Clé API UniFi Protect": "Clave API de UniFi Protect",
+        "Saisir la clé API": "Introduzca la clave API",
+        "Créez une clé depuis UniFi Site Manager, dans Paramètres → Clés API.": "Cree una clave en UniFi Site Manager, en Configuración → Claves API.",
         "Controleur Unifi protect": "Controlador de protección Unifi",
         "Découverte": "Descubrimiento",
         "Fréquence de rafraîchissement": "Frecuencia de actualización",

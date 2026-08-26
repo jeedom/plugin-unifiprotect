@@ -1,1040 +1,350 @@
 <?php
 
+/* This file is part of Jeedom.
+ *
+ * Jeedom is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Jeedom is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 /**
- * the UniFi API client class
+ * Minimal client for the official local UniFi Protect Integration API.
  *
- * This UniFi API client class is based on the work done by the following developers:
- *    domwo: http://community.ubnt.com/t5/UniFi-Wireless/little-php-class-for-unifi-api/m-p/603051
- *    fbagnol: https://github.com/fbagnol/class.unifi.php
- * and the API as published by Ubiquiti:
- *    https://www.ubnt.com/downloads/unifi/<UniFi controller version number>/unifi_sh_api
- *
- * @package UniFi_Controller_API_Client_Class
- * @author  Art of WiFi <info@artofwifi.net>
- * @version Release: 1.1.70
- * @license This class is subject to the MIT license that is bundled with this package in the file LICENSE.md
- * @example This directory in the package repository contains a collection of examples:
- *          https://github.com/Art-of-WiFi/UniFi-API-client/tree/master/examples
+ * API documentation: https://developer.ui.com/protect
  */
 class unifiprotectapi {
-    /**
-     * private and protected properties
-     */
-    const CLASS_VERSION = '1.1.75';
-    protected $baseurl              = 'https://127.0.0.1:443';
-    protected $user                 = '';
-    protected $password             = '';
-    protected $site                 = 'default';
-    protected $version              = '6.2.26';
-    protected $debug                = false;
-    protected $is_logged_in         = false;
-    protected $is_unifi_os          = false;
-    protected $exec_retries         = 0;
-    protected $cookies              = '';
-    protected $last_results_raw     = null;
-    protected $last_error_message   = null;
-    protected $curl_ssl_verify_peer = false;
-    protected $curl_ssl_verify_host = false;
-    protected $curl_http_version    = CURL_HTTP_VERSION_1_1;
-    protected $curl_headers         = [];
-    protected $curl_method          = 'GET';
-    protected $curl_methods_allowed = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
-    protected $curl_request_timeout = 30;
-    protected $curl_connect_timeout = 10;
+    private $api_key = '';
+    private $baseurl = '';
+    private $is_logged_in = false;
+    private $ssl_verify_peer = false;
+    private $ssl_verify_host = false;
+    private $request_timeout = 30;
+    private $connect_timeout = 10;
+    private $last_error_message = '';
+    private $last_http_code = 0;
 
-    /**
-     * Construct an instance of the UniFi API client class
-     *
-     * @param string  $user       user name to use when connecting to the UniFi controller
-     * @param string  $password   password to use when connecting to the UniFi controller
-     * @param string  $baseurl    optional, base URL of the UniFi controller which *must* include an 'https://' prefix,
-     *                            a port suffix (e.g. :8443) is required for non-UniFi OS controllers,
-     *                            do not add trailing slashes, default value is 'https://127.0.0.1:8443'
-     * @param string  $site       optional, short site name to access, defaults to 'default'
-     * @param string  $version    optional, the version number of the controller
-     * @param bool    $ssl_verify optional, whether to validate the controller's SSL certificate or not, a value of true is
-     *                            recommended for production environments to prevent potential MitM attacks, default value (false)
-     *                            disables validation of the controller certificate
-     */
-    public function __construct($user, $password, $baseurl = '', $site = '', $version = '', $ssl_verify = false) {
+    public function __construct($api_key, $baseurl, $ssl_verify = false) {
         if (!extension_loaded('curl')) {
-            trigger_error('The PHP curl extension is not loaded. Please correct this before proceeding!');
+            throw new RuntimeException('The PHP curl extension is required');
         }
 
-        $this->user     = trim($user);
-        $this->password = trim($password);
+        $this->api_key = trim((string) $api_key);
+        $this->baseurl = rtrim(trim((string) $baseurl), '/');
 
-        if (!empty($baseurl)) {
-            $this->check_base_url($baseurl);
-            $this->baseurl = trim($baseurl);
+        if ($this->api_key === '') {
+            throw new InvalidArgumentException('The UniFi Protect API key is missing');
+        }
+        if (!filter_var($this->baseurl, FILTER_VALIDATE_URL)) {
+            throw new InvalidArgumentException('The UniFi Protect controller URL is invalid');
         }
 
-        if (!empty($site)) {
-            $this->check_site($site);
-            $this->site = trim($site);
-        }
-
-        if (!empty($version)) {
-            $this->version = trim($version);
-        }
-
-        if ((bool) $ssl_verify === true) {
-            $this->curl_ssl_verify_peer = true;
-            $this->curl_ssl_verify_host = 2;
+        if ($ssl_verify === true) {
+            $this->ssl_verify_peer = true;
+            $this->ssl_verify_host = 2;
         }
     }
 
     /**
-     * This method is called as soon as there are no other references to the class instance
-     * https://www.php.net/manual/en/language.oop5.decon.php
+     * Validate the API key and the Protect Integration API availability.
      *
-     * NOTE: to force the class instance to log out when you're done, simply call logout()
-     */
-    public function __destruct() {
-        /**
-         * if $_SESSION['unificookie'] is set, do not logout here
-         */
-        if (isset($_SESSION['unificookie'])) {
-            return;
-        }
-
-        /**
-         * logout, if needed
-         */
-        if ($this->is_logged_in) {
-            $this->logout();
-        }
-    }
-
-    /**
-     * Login to the UniFi controller
-     *
-     * @return bool|int returns true upon success, false or HTTP response code on access failure (e.g. 400 or 401)
+     * @return bool|int true on success, otherwise the HTTP status or false
      */
     public function login() {
-        /**
-         * skip the login process if already logged in
-         */
-        if ($this->update_unificookie()) {
-            $this->is_logged_in = true;
-        }
-
-        if ($this->is_logged_in === true) {
+        if ($this->is_logged_in) {
             return true;
         }
 
-        /**
-         * prepare cURL and options to check whether this is a "regular" controller or one based on UniFi OS
-         */
-        if (!($ch = $this->get_curl_handle())) {
+        $meta = $this->request_json('/meta/info');
+        if ($meta === false) {
+            return $this->last_http_code > 0 ? $this->last_http_code : false;
+        }
+        if (!isset($meta['applicationVersion']) || !is_string($meta['applicationVersion'])) {
+            $this->set_schema_error('/meta/info', 'applicationVersion');
             return false;
         }
 
-        $curl_options = [
-            CURLOPT_HEADER => true,
-            CURLOPT_POST   => true,
-            CURLOPT_NOBODY => true,
-            CURLOPT_URL    => $this->baseurl . '/',
-        ];
-
-        curl_setopt_array($ch, $curl_options);
-
-        /**
-         * execute the cURL request and get the HTTP response code
-         */
-        curl_exec($ch);
-        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-        if (curl_errno($ch)) {
-            trigger_error('cURL error: ' . curl_error($ch));
-        }
-
-        /**
-         * prepare the actual login
-         */
-        $curl_options = [
-            CURLOPT_NOBODY     => false,
-            CURLOPT_POSTFIELDS => json_encode(['username' => $this->user, 'password' => $this->password]),
-            CURLOPT_HTTPHEADER => [
-                'content-type: application/json',
-                'Expect:',
-            ],
-            CURLOPT_REFERER    => $this->baseurl . '/login',
-            CURLOPT_URL        => $this->baseurl . '/api/login',
-        ];
-
-        /**
-         * specific to UniFi OS-based controllers
-         */
-        if ($http_code === 200) {
-            $this->is_unifi_os         = true;
-            $curl_options[CURLOPT_URL] = $this->baseurl . '/api/auth/login';
-        }
-
-        curl_setopt_array($ch, $curl_options);
-
-        /**
-         * execute the cURL request and get the HTTP response code
-         */
-        $response  = curl_exec($ch);
-        $http_code = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
-
-        if (curl_errno($ch)) {
-            trigger_error('cURL error: ' . curl_error($ch));
-        }
-
-        if ($this->debug) {
-            print PHP_EOL . '<pre>';
-            print PHP_EOL . '-----------LOGIN-------------' . PHP_EOL;
-            print_r(curl_getinfo($ch));
-            print PHP_EOL . '----------RESPONSE-----------' . PHP_EOL;
-            print $response;
-            print PHP_EOL . '-----------------------------' . PHP_EOL;
-            print '</pre>' . PHP_EOL;
-        }
-
-        /**
-         * based on the HTTP response code trigger an error
-         */
-        if ($http_code === 400 || $http_code === 401) {
-            trigger_error("HTTP response status received: $http_code. Probably a controller login failure");
-
-            return $http_code;
-        }
-
-        curl_close($ch);
-        /**
-         * check the HTTP response code
-         */
-        if ($http_code >= 200 && $http_code < 400) {
-            $this->is_logged_in = true;
-            return $this->is_logged_in;
-        }
-
-        return false;
+        $this->is_logged_in = true;
+        return true;
     }
 
-    /**
-     * Logout from the UniFi controller
-     *
-     * @return bool returns true upon success
-     */
     public function logout() {
-        /**
-         * prepare cURL and options
-         */
-        if (!($ch = $this->get_curl_handle())) {
-            return false;
-        }
-
-        $curl_options = [
-            CURLOPT_HEADER => true,
-            CURLOPT_POST   => true,
-        ];
-
-        /**
-         * construct the HTTP request headers as required
-         */
-        $this->curl_headers = [
-            'Expect:',
-        ];
-
-        $logout_path = '/logout';
-        if ($this->is_unifi_os) {
-            $logout_path                         = '/api/auth/logout';
-            $curl_options[CURLOPT_CUSTOMREQUEST] = 'POST';
-
-            $this->create_x_csrf_token_header();
-        }
-
-        $curl_options[CURLOPT_HTTPHEADER] = $this->curl_headers;
-        $curl_options[CURLOPT_URL]        = $this->baseurl . $logout_path;
-
-        curl_setopt_array($ch, $curl_options);
-
-        /**
-         * execute the cURL request to logout
-         */
-        curl_exec($ch);
-
-        if (curl_errno($ch)) {
-            trigger_error('cURL error: ' . curl_error($ch));
-            return false;
-        }
-
-        curl_close($ch);
-
         $this->is_logged_in = false;
-        $this->cookies      = '';
         return true;
     }
 
-    /****************************************************************
-     * Functions to access UniFi controller API routes from here:
-     ****************************************************************/
-
-    public function custom_api_request($path, $method = 'GET', $payload = null, $return = 'array') {
-        if (!in_array($method, $this->curl_methods_allowed)) {
-            return false;
-        }
-
-        if (strpos($path, '/') !== 0) {
-            return false;
-        }
-
-        $this->curl_method = $method;
-
-        if ($return === 'array') {
-            return $this->fetch_results($path, $payload);
-        } elseif ($return === 'boolean') {
-            return $this->fetch_results_boolean($path, $payload);
-        }
-
-        return false;
-    }
-
+    /**
+     * Aggregate the three official resources used by the plugin.
+     *
+     * @return array|false
+     */
     public function get_server_info() {
-        return $this->fetch_results('/bootstrap');
-    }
-
-    public function get_raw_events($_start, $_end) {
-        return $this->fetch_results('/events?start=' . $_start . '&end=' . $_end);
-    }
-
-    public function get_snapshot($_camera_id) {
-        return $this->fetch_results('/cameras/' . $_camera_id . '/snapshot?force=true');
-    }
-
-    public function set_notification($_user_id, $_state) {
-        $payload = array('state' => $_state);
-        var_dump(self::custom_api_request('/users/' . $_user_id . '/notificationsV2', 'PATCH', $payload));
-    }
-
-    /**
-     * set recording mode
-     *
-     * @param string $_camera_id
-     * @param string $mode, should be one of ['always', 'never', 'detections', 'schedule', 'adaptive']
-     */
-    public function set_recording_mode(string $_camera_id, string $mode) {
-        $_settings = ["recordingSettings" => [
-            "mode" => $mode
-        ]];
-        return $this->custom_api_request("/cameras/{$_camera_id}", 'PATCH', $_settings);
-    }
-
-
-    /****************************************************************
-     * setter/getter functions from here:
-     ****************************************************************/
-    /**
-     * Modify the private property $site
-     *
-     * NOTE:
-     * this method is useful to switch between sites
-     *
-     * @param string $site must be the short site name of a site to which the
-     *                     provided credentials have access
-     * @return string the new (short) site name
-     */
-    public function set_site($site) {
-        $this->check_site($site);
-        $this->site = trim($site);
-        return $this->site;
-    }
-
-    /**
-     * Get the private property $site
-     *
-     * @return string the current (short) site name
-     */
-    public function get_site() {
-        return $this->site;
-    }
-
-    /**
-     * Set debug mode
-     *
-     * @param  bool $enable true enables debug mode, false disables debug mode
-     * @return bool         false when a non-boolean parameter was passed
-     */
-    public function set_debug($enable) {
-        if ($enable === true || $enable === false) {
-            $this->debug = $enable;
-
-            return true;
-        }
-
-        trigger_error('Error: the parameter for set_debug() must be boolean');
-
-        return false;
-    }
-
-    /**
-     * Get the private property $debug
-     *
-     * @return bool the current boolean value for $debug
-     */
-    public function get_debug() {
-        return $this->debug;
-    }
-
-    /**
-     * Get last raw results
-     *
-     * @param  boolean       $return_json true returns the results in "pretty printed" json format,
-     *                                    false returns PHP stdClass Object format (default)
-     * @return object|string              the raw results as returned by the controller API
-     */
-    public function get_last_results_raw($return_json = false) {
-        if (!is_null($this->last_results_raw)) {
-            if ($return_json) {
-                return json_encode($this->last_results_raw, JSON_PRETTY_PRINT);
+        if (!$this->is_logged_in) {
+            $login = $this->login();
+            if ($login !== true) {
+                return false;
             }
-
-            return $this->last_results_raw;
         }
 
-        return false;
+        $nvr = $this->get_nvr();
+        if ($nvr === false) {
+            return false;
+        }
+        $cameras = $this->get_cameras();
+        if ($cameras === false) {
+            return false;
+        }
+        $chimes = $this->get_chimes();
+        if ($chimes === false) {
+            return false;
+        }
+
+        return array(
+            'nvr' => $nvr,
+            'cameras' => $cameras,
+            'chimes' => $chimes,
+        );
     }
 
-    /**
-     * Get last error message
-     *
-     * @return object|bool the error message of the last method called in PHP stdClass Object format, returns false if unavailable
-     */
+    /** @return array|false */
+    public function get_nvr() {
+        $nvr = $this->request_json('/nvrs');
+        if ($nvr === false) {
+            return false;
+        }
+        if (!$this->is_valid_nvr($nvr)) {
+            $this->set_schema_error('/nvrs', 'string id, string modelKey, string|null name');
+            return false;
+        }
+
+        $nvr['name'] = $this->device_name($nvr, 'UniFi Protect');
+        $nvr['type'] = 'nvr';
+        $nvr['state'] = 1;
+        return $nvr;
+    }
+
+    /** @return array|false */
+    public function get_cameras() {
+        $cameras = $this->request_json('/cameras');
+        if ($cameras === false) {
+            return false;
+        }
+        if (!$this->is_list($cameras)) {
+            $this->set_schema_error('/cameras', 'array');
+            return false;
+        }
+
+        foreach ($cameras as $index => &$camera) {
+            if (!$this->is_valid_connected_device($camera)) {
+                $this->set_schema_error('/cameras[' . $index . ']', 'string id, modelKey, mac, valid state and string|null name');
+                return false;
+            }
+            $camera['name'] = $this->device_name($camera, 'Camera');
+            $camera['type'] = 'camera';
+            $camera['isConnected'] = $camera['state'] === 'CONNECTED';
+        }
+        unset($camera);
+
+        return $cameras;
+    }
+
+    /** @return array|false */
+    public function get_chimes() {
+        $chimes = $this->request_json('/chimes');
+        if ($chimes === false) {
+            return false;
+        }
+        if (!$this->is_list($chimes)) {
+            $this->set_schema_error('/chimes', 'array');
+            return false;
+        }
+
+        foreach ($chimes as $index => &$chime) {
+            if (!$this->is_valid_connected_device($chime)) {
+                $this->set_schema_error('/chimes[' . $index . ']', 'string id, modelKey, mac, valid state and string|null name');
+                return false;
+            }
+            $chime['name'] = $this->device_name($chime, 'Chime');
+            $chime['type'] = 'chime';
+            $chime['isConnected'] = $chime['state'] === 'CONNECTED';
+        }
+        unset($chime);
+
+        return $chimes;
+    }
+
+    /** @return string|false JPEG payload */
+    public function get_snapshot($camera_id) {
+        $camera_id = trim((string) $camera_id);
+        if ($camera_id === '') {
+            $this->last_error_message = 'The camera id is missing';
+            return false;
+        }
+
+        return $this->request_binary('/cameras/' . rawurlencode($camera_id) . '/snapshot?highQuality=true', 'image/jpeg');
+    }
+
     public function get_last_error_message() {
-        if (!is_null($this->last_error_message)) {
-            return $this->last_error_message;
-        }
-
-        return false;
+        return $this->last_error_message;
     }
 
-    /**
-     * Get Cookie from UniFi controller (singular and plural)
-     *
-     * NOTES:
-     * - when the results from this method are stored in $_SESSION['unificookie'], the Class initially does not
-     *   log in to the controller when a subsequent request is made using a new instance. This speeds up the
-     *   overall request considerably. Only when a subsequent request fails (e.g. cookies have expired) is a new login
-     *   executed and the value of $_SESSION['unificookie'] updated.
-     * - to force the Class instance to log out automatically upon destruct, simply call logout() or unset
-     *   $_SESSION['unificookie'] at the end of your code
-     *
-     * @return string the UniFi controller cookie
-     */
-    public function get_cookie() {
-        return $this->cookies;
+    public function get_last_http_code() {
+        return $this->last_http_code;
     }
 
-    public function get_cookies() {
-        return $this->cookies;
-    }
-
-    /**
-     * Get version of the Class
-     *
-     * @return string semver compatible version of this class
-     *                https://semver.org/
-     */
-    public function get_class_version() {
-        return $this->class_version;
-    }
-
-    /**
-     * Set value for the private property $cookies
-     *
-     * @param string $cookies_value new value for $cookies
-     */
-    public function set_cookies($cookies_value) {
-        $this->cookies = $cookies_value;
-    }
-
-    /**
-     * Get current request method
-     *
-     * @return string request type
-     */
-    public function get_method() {
-        return $this->method;
-    }
-
-    /**
-     * Set request method
-     *
-     * @param  string $method a valid HTTP request method
-     * @return bool           whether request was successful or not
-     */
-    public function set_method($method) {
-
-        if (!in_array($method, $this->methods_allowed)) {
+    /** @return array|false */
+    protected function request_json($path) {
+        $response = $this->request($path, 'application/json');
+        if ($response === false) {
             return false;
         }
 
-        $this->method = $method;
-
-        return true;
-    }
-
-    /**
-     * Get value for cURL option CURLOPT_SSL_VERIFYPEER
-     *
-     * https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYPEER.html
-     *
-     * @return bool value of private property $ssl_verify_peer (cURL option CURLOPT_SSL_VERIFYPEER)
-     */
-    public function get_ssl_verify_peer() {
-        return $this->ssl_verify_peer;
-    }
-
-    /**
-     * Set value for cURL option CURLOPT_SSL_VERIFYPEER
-     *
-     * https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYPEER.html
-     *
-     * @param int|bool $ssl_verify_peer should be 0/false or 1/true
-     */
-    public function set_ssl_verify_peer($ssl_verify_peer) {
-        if (!in_array($ssl_verify_peer, [0, false, 1, true])) {
+        $content_type = strtolower((string) $response['content_type']);
+        if (strpos($content_type, 'application/json') !== 0) {
+            $this->last_error_message = 'Unexpected content type returned by the official UniFi Protect API for ' . $path . ': ' . $content_type;
             return false;
         }
 
-        $this->ssl_verify_peer = $ssl_verify_peer;
-
-        return true;
+        $decoded = json_decode($response['body'], true);
+        if (!is_array($decoded) || json_last_error() !== JSON_ERROR_NONE) {
+            $this->last_error_message = 'Invalid JSON returned by the official UniFi Protect API for ' . $path;
+            return false;
+        }
+        return $decoded;
     }
 
-    /**
-     * Get value for cURL option CURLOPT_SSL_VERIFYHOST
-     *
-     * https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYHOST.html
-     *
-     * @return bool value of private property $ssl_verify_peer (cURL option CURLOPT_SSL_VERIFYHOST)
-     */
-    public function get_ssl_verify_host() {
-        return $this->ssl_verify_host;
-    }
-
-    /**
-     * Set value for cURL option CURLOPT_SSL_VERIFYHOST
-     *
-     * https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYHOST.html
-     *
-     * @param int|bool $ssl_verify_host should be 0/false or 2
-     */
-    public function set_ssl_verify_host($ssl_verify_host) {
-        if (!in_array($ssl_verify_host, [0, false, 2])) {
+    /** @return string|false */
+    protected function request_binary($path, $expected_content_type) {
+        $response = $this->request($path, $expected_content_type);
+        if ($response === false) {
             return false;
         }
 
-        $this->ssl_verify_host = $ssl_verify_host;
-
-        return true;
+        $content_type = strtolower((string) $response['content_type']);
+        if (strpos($content_type, strtolower($expected_content_type)) !== 0) {
+            $this->last_error_message = 'Unexpected content type returned by the official UniFi Protect API for ' . $path . ': ' . $content_type;
+            return false;
+        }
+        if ($response['body'] === '') {
+            $this->last_error_message = 'Empty response returned by the official UniFi Protect API for ' . $path;
+            return false;
+        }
+        return $response['body'];
     }
 
-    /**
-     * Is current controller UniFi OS-based
-     *
-     * @return bool whether current controller is UniFi OS-based
-     */
-    public function get_is_unifi_os() {
-        return $this->is_unifi_os;
-    }
+    /** @return array|false Array containing body and content_type */
+    protected function request($path, $accept) {
+        $this->last_error_message = '';
+        $this->last_http_code = 0;
 
-    /**
-     * Set value for private property $is_unifi_os
-     *
-     * @param  bool|int $is_unifi_os new value, must be 0, 1, true or false
-     * @return bool                  whether request was successful or not
-     */
-    public function set_is_unifi_os($is_unifi_os) {
-        if (!in_array($is_unifi_os, [0, false, 1, true])) {
+        $curl = curl_init();
+        if ($curl === false) {
+            $this->last_error_message = 'Unable to initialize cURL';
             return false;
         }
 
-        $this->is_unifi_os = $is_unifi_os;
-
-        return true;
-    }
-
-    /**
-     * Set value for the private property $connect_timeout
-     *
-     * @param int $timeout new value for $connect_timeout in seconds
-     */
-    public function set_connection_timeout($timeout) {
-        $this->connect_timeout = $timeout;
-    }
-
-    /**
-     * Get current value of the private property $connect_timeout
-     *
-     * @return int current value if $connect_timeout
-     */
-    public function get_connection_timeout() {
-        return $this->connect_timeout;
-    }
-
-    public function set_curl_request_timeout($timeout) {
-        $this->curl_request_timeout = $timeout;
-    }
-
-    /**
-     * Get current value of the private property $request_timeout
-     *
-     * @return int current value of $request_timeout
-     */
-    public function get_curl_request_timeout() {
-        return $this->curl_request_timeout;
-    }
-
-    /**
-     * Set value for the private property $curl_http_version
-     *
-     * NOTES:
-     * - as of cURL version 7.62.0 the default value is CURL_HTTP_VERSION_2TLS which may cause issues
-     * - the default value used in this class is CURL_HTTP_VERSION_1_1
-     * - https://curl.se/libcurl/c/CURLOPT_HTTP_VERSION.html
-     *
-     * @param int $http_version new value for $curl_http_version, can be CURL_HTTP_VERSION_1_1 int(2)
-     *                          or CURL_HTTP_VERSION_2TLS int(4)
-     */
-    public function set_curl_http_version($http_version) {
-        $this->curl_http_version = $http_version;
-    }
-
-    /**
-     * Get current value of the private property $curl_http_version
-     *
-     * @return int current value of $request_timeout, can be CURL_HTTP_VERSION_1_1 int(2) or
-     *             CURL_HTTP_VERSION_2TLS int(4)
-     */
-    public function get_curl_http_version() {
-        return $this->curl_http_version;
-    }
-
-    /****************************************************************
-     * private and protected functions from here:
-     ****************************************************************/
-
-    /**
-     * Fetch results
-     *
-     * execute the cURL request and return results
-     *
-     * @param  string       $path           request path
-     * @param  object|array $payload        optional, PHP associative array or stdClass Object, payload to pass with the request
-     * @param  boolean      $boolean        optional, whether the method should return a boolean result, else return
-     *                                      the "data" array
-     * @param  boolean      $login_required optional, whether the method requires to be logged in or not
-     * @return bool|array                   [description]
-     */
-
-
-
-    protected function fetch_results($path, $payload = null, $boolean = false, $login_required = true) {
-        /**
-         * guard clause to check if logged in when needed
-         */
-        if ($login_required && !$this->is_logged_in) {
-            return false;
-        }
-
-        $this->last_results_raw = $this->exec_curl($path, $payload);
-
-        if (is_string($this->last_results_raw)) {
-            $response = json_decode($this->last_results_raw, true);
-            if (!is_array($response)) {
-                return $this->last_results_raw;
-            }
-            return $response;
-        }
-        return false;
-    }
-
-    /**
-     * Fetch results where output should be boolean (true/false)
-     *
-     * execute the cURL request and return a boolean value
-     *
-     * @param  string       $path           request path
-     * @param  object|array $payload        optional, PHP associative array or stdClass Object, payload to pass with the request
-     * @param  bool         $login_required optional, whether the method requires to be logged in or not
-     * @return bool                         [description]
-     */
-    protected function fetch_results_boolean($path, $payload = null, $login_required = true) {
-        return $this->fetch_results($path, $payload, true, $login_required);
-    }
-
-    /**
-     * Capture the latest JSON error when $this->debug is true
-     *
-     * @return bool returns true upon success, false upon failure
-     */
-    protected function catch_json_last_error() {
-        if ($this->debug) {
-            $error = 'Unknown JSON error occurred';
-            switch (json_last_error()) {
-                case JSON_ERROR_NONE:
-                    // JSON is valid, no error has occurred and return true early
-                    return true;
-                case JSON_ERROR_DEPTH:
-                    $error = 'The maximum stack depth has been exceeded';
-                    break;
-                case JSON_ERROR_STATE_MISMATCH:
-                    $error = 'Invalid or malformed JSON';
-                    break;
-                case JSON_ERROR_CTRL_CHAR:
-                    $error = 'Control character error, possibly incorrectly encoded';
-                    break;
-                case JSON_ERROR_SYNTAX:
-                    $error = 'Syntax error, malformed JSON';
-                    break;
-                case JSON_ERROR_UTF8:
-                    // PHP >= 5.3.3
-                    $error = 'Malformed UTF-8 characters, possibly incorrectly encoded';
-                    break;
-                case JSON_ERROR_RECURSION:
-                    // PHP >= 5.5.0
-                    $error = 'One or more recursive references in the value to be encoded';
-                    break;
-                case JSON_ERROR_INF_OR_NAN:
-                    // PHP >= 5.5.0
-                    $error = 'One or more NAN or INF values in the value to be encoded';
-                    break;
-                case JSON_ERROR_UNSUPPORTED_TYPE:
-                    $error = 'A value of a type that cannot be encoded was given';
-                    break;
-            }
-
-            /**
-             * check whether we have PHP >= 7.0.0
-             */
-            if (defined('JSON_ERROR_INVALID_PROPERTY_NAME') && defined('JSON_ERROR_UTF16')) {
-                switch (json_last_error()) {
-                    case JSON_ERROR_INVALID_PROPERTY_NAME:
-                        $error = 'A property name that cannot be encoded was given';
-                        break;
-                    case JSON_ERROR_UTF16:
-                        $error = 'Malformed UTF-16 characters, possibly incorrectly encoded';
-                        break;
-                }
-            }
-
-            trigger_error('JSON decode error: ' . $error);
-
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Validate the submitted base URL
-     *
-     * @param  string $baseurl the base URL to validate
-     * @return bool            true if base URL is a valid URL, else returns false
-     */
-    protected function check_base_url($baseurl) {
-        if (!filter_var($baseurl, FILTER_VALIDATE_URL) || substr($baseurl, -1) === '/') {
-            trigger_error('The URL provided is incomplete, invalid or ends with a / character!');
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Check the (short) site name
-     *
-     * @param string $site the (short) site name to check
-     * @return bool true if (short) site name is valid, else returns false
-     */
-    protected function check_site($site) {
-        if ($this->debug && preg_match("/\s/", $site)) {
-            trigger_error('The provided (short) site name may not contain any spaces');
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Update the unificookie if sessions are enabled
-     *
-     * @return bool true when unificookie was updated, else returns false
-     */
-    protected function update_unificookie() {
-        if (session_status() === PHP_SESSION_ACTIVE && isset($_SESSION['unificookie']) && !empty($_SESSION['unificookie'])) {
-            $this->cookies = $_SESSION['unificookie'];
-
-            /**
-             * if the cookie contains a JWT this is a UniFi OS controller
-             */
-            if (strpos($this->cookies, 'TOKEN') !== false) {
-                $this->is_unifi_os = true;
-            }
-
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Add a cURL header containing the CSRF token from the TOKEN in our Cookie string
-     *
-     * @return void
-     */
-    protected function create_x_csrf_token_header() {
-        if (!empty($this->cookies) && strpos($this->cookies, 'TOKEN') !== false) {
-            $cookie_bits = explode('=', $this->cookies);
-            if (empty($cookie_bits) || !array_key_exists(1, $cookie_bits)) {
-                return;
-            }
-
-            $jwt_components = explode('.', $cookie_bits[1]);
-            if (empty($jwt_components) || !array_key_exists(1, $jwt_components)) {
-                return;
-            }
-
-            $this->curl_headers[] = 'x-csrf-token: ' . json_decode(base64_decode($jwt_components[1]))->csrfToken;
-        }
-    }
-
-    /**
-     * Callback function for cURL to extract and store cookies as needed
-     *
-     * @param  object|resource $ch          the cURL instance
-     * @param  int             $header_line the response header line number
-     * @return int                          length of the header line
-     */
-    protected function response_header_callback($ch, $header_line) {
-        if (strpos($header_line, 'unifises') !== false || strpos($header_line, 'TOKEN') !== false) {
-            $cookie = trim(str_replace(['set-cookie: ', 'Set-Cookie: '], '', $header_line));
-
-            if (!empty($cookie)) {
-                $cookie_crumbs = explode(';', $cookie);
-                foreach ($cookie_crumbs as $cookie_crumb) {
-                    if (strpos($cookie_crumb, 'unifises') !== false) {
-                        $this->cookies      = $cookie_crumb;
-                        $this->is_logged_in = true;
-                        $this->is_unifi_os  = false;
-
-                        break;
-                    }
-
-                    if (strpos($cookie_crumb, 'TOKEN') !== false) {
-                        $this->cookies      = $cookie_crumb;
-                        $this->is_logged_in = true;
-                        $this->is_unifi_os  = true;
-
-                        break;
-                    }
-                }
-            }
-        }
-
-        return strlen($header_line);
-    }
-
-    /**
-     * Execute the cURL request
-     *
-     * @param  string            $path    path for the request
-     * @param  object|array      $payload optional, payload to pass with the request
-     * @return bool|array|string          response returned by the controller API, false upon error
-     */
-    protected function exec_curl($path, $payload = null) {
-        if (!in_array($this->curl_method, $this->curl_methods_allowed)) {
-            trigger_error('an invalid HTTP request type was used: ' . $this->curl_method);
-            return false;
-        }
-
-        if (!($ch = $this->get_curl_handle())) {
-            trigger_error('get_curl_handle() did not return a resource');
-            return false;
-        }
-
-        $this->curl_headers = [];
-        $url                = $this->baseurl . $path;
-
-        if ($this->is_unifi_os) {
-            $url = $this->baseurl . '/proxy/protect/api' . $path;
-        }
-        $curl_options = [
+        $url = $this->baseurl . '/proxy/protect/integration/v1' . $path;
+        curl_setopt_array($curl, array(
             CURLOPT_URL => $url,
-        ];
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => $this->connect_timeout,
+            CURLOPT_TIMEOUT => $this->request_timeout,
+            CURLOPT_SSL_VERIFYPEER => $this->ssl_verify_peer,
+            CURLOPT_SSL_VERIFYHOST => $this->ssl_verify_host,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_HTTPHEADER => array(
+                'Accept: ' . $accept,
+                'X-API-Key: ' . $this->api_key,
+            ),
+        ));
 
-        /**
-         * when a payload is passed
-         */
-        $json_payload = '';
-        if (!empty($payload)) {
-            $json_payload                     = json_encode($payload, JSON_UNESCAPED_SLASHES);
-            $curl_options[CURLOPT_POSTFIELDS] = $json_payload;
+        $body = curl_exec($curl);
+        $this->last_http_code = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $content_type = (string) curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
 
-            /**
-             * add empty Expect header to prevent cURL from injecting an "Expect: 100-continue" header
-             */
-            $this->curl_headers = [
-                'content-type: application/json',
-                'Expect:',
-            ];
-
-            /**
-             * should not use GET (the default request type) or DELETE when passing a payload,
-             * switch to POST instead
-             */
-            if ($this->curl_method === 'GET' || $this->curl_method === 'DELETE') {
-                $this->curl_method = 'POST';
-            }
-        }
-
-        switch ($this->curl_method) {
-            case 'POST':
-                $curl_options[CURLOPT_POST] = true;
-                break;
-            case 'DELETE':
-                $curl_options[CURLOPT_CUSTOMREQUEST] = 'DELETE';
-                break;
-            case 'PUT':
-                $curl_options[CURLOPT_CUSTOMREQUEST] = 'PUT';
-                break;
-            case 'PATCH':
-                $curl_options[CURLOPT_CUSTOMREQUEST] = 'PATCH';
-                break;
-        }
-
-        if ($this->is_unifi_os && $this->curl_method !== 'GET') {
-            $this->create_x_csrf_token_header();
-        }
-
-        if (count($this->curl_headers) > 0) {
-            $curl_options[CURLOPT_HTTPHEADER] = $this->curl_headers;
-        }
-
-        curl_setopt_array($ch, $curl_options);
-
-        /**
-         * execute the cURL request
-         */
-        $response = curl_exec($ch);
-        if (curl_errno($ch)) {
-            trigger_error('cURL error: ' . curl_error($ch));
-        }
-
-        /**
-         * get the HTTP response code
-         */
-        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-        /**
-         * an HTTP response code 401 (Unauthorized) indicates the Cookie/Token has expired in which case
-         * re-login is required
-         */
-        if ($http_code === 401) {
-            if ($this->debug) {
-                error_log(__FUNCTION__ . ': needed to reconnect to UniFi controller');
-            }
-
-            if ($this->exec_retries === 0) {
-                /**
-                 * explicitly clear the expired Cookie/Token, update other properties and log out before logging in again
-                 */
-                if (isset($_SESSION['unificookie'])) {
-                    $_SESSION['unificookie'] = '';
-                }
-
-                $this->is_logged_in = false;
-                $this->cookies      = '';
-                $this->exec_retries++;
-                curl_close($ch);
-
-                /**
-                 * then login again
-                 */
-                $this->login();
-
-                /**
-                 * when re-login was successful, simply execute the same cURL request again
-                 */
-                if ($this->is_logged_in) {
-                    if ($this->debug) {
-                        error_log(__FUNCTION__ . ': re-logged in, calling exec_curl again');
-                    }
-
-                    return $this->exec_curl($path, $payload);
-                }
-
-                if ($this->debug) {
-                    error_log(__FUNCTION__ . ': re-login failed');
-                }
-            }
-
+        if ($body === false) {
+            $this->last_error_message = 'cURL error: ' . curl_error($curl);
             return false;
         }
 
-        if ($this->debug) {
-            print PHP_EOL . '<pre>';
-            print PHP_EOL . '---------cURL INFO-----------' . PHP_EOL;
-            print_r(curl_getinfo($ch));
-            print PHP_EOL . '-------URL & PAYLOAD---------' . PHP_EOL;
-            print $url . PHP_EOL;
-            if (empty($json_payload)) {
-                print 'empty payload';
-            }
-
-            print $json_payload;
-            print PHP_EOL . '----------RESPONSE-----------' . PHP_EOL;
-            print $response;
-            print PHP_EOL . '-----------------------------' . PHP_EOL;
-            print '</pre>' . PHP_EOL;
+        if ($this->last_http_code < 200 || $this->last_http_code >= 300) {
+            $this->last_error_message = $this->http_error_message($this->last_http_code, $body);
+            return false;
         }
 
-        curl_close($ch);
-
-        /**
-         * set method back to default value, just in case
-         */
-        $this->curl_method = 'GET';
-        return $response;
+        return array('body' => $body, 'content_type' => $content_type);
     }
 
-    /**
-     * Create a new cURL resource and return a cURL handle
-     *
-     * @return object|bool|resource cURL handle upon success, false upon failure
-     */
-    protected function get_curl_handle() {
-        $ch = curl_init();
-        if (is_object($ch) || is_resource($ch)) {
-            $curl_options = [
-                CURLOPT_PROTOCOLS      => CURLPROTO_HTTPS,
-                CURLOPT_HTTP_VERSION   => $this->curl_http_version,
-                CURLOPT_SSL_VERIFYPEER => $this->curl_ssl_verify_peer,
-                CURLOPT_SSL_VERIFYHOST => $this->curl_ssl_verify_host,
-                CURLOPT_CONNECTTIMEOUT => $this->curl_connect_timeout,
-                CURLOPT_TIMEOUT        => $this->curl_request_timeout,
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_ENCODING       => '',
-                CURLOPT_HEADERFUNCTION => [$this, 'response_header_callback'],
-            ];
-
-            if ($this->debug) {
-                $curl_options[CURLOPT_VERBOSE] = true;
+    private function http_error_message($http_code, $body) {
+        $message = 'HTTP ' . $http_code . ' returned by the official UniFi Protect API';
+        $decoded = json_decode($body, true);
+        if (is_array($decoded)) {
+            foreach (array('message', 'error', 'detail') as $key) {
+                if (isset($decoded[$key]) && is_string($decoded[$key]) && $decoded[$key] !== '') {
+                    return $message . ': ' . $decoded[$key];
+                }
             }
-
-            if (!empty($this->cookies)) {
-                $curl_options[CURLOPT_COOKIESESSION] = true;
-                $curl_options[CURLOPT_COOKIE]        = $this->cookies;
-            }
-
-            curl_setopt_array($ch, $curl_options);
-            return $ch;
         }
+        return $message;
+    }
 
-        return false;
+    private function set_schema_error($path, $expected) {
+        $this->last_error_message = 'Unexpected response schema for ' . $path . ' (expected ' . $expected . ')';
+    }
+
+    private function has_fields($data, $fields) {
+        if (!is_array($data)) {
+            return false;
+        }
+        foreach ($fields as $field) {
+            if (!array_key_exists($field, $data)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private function is_valid_nvr($nvr) {
+        return $this->has_fields($nvr, array('id', 'modelKey', 'name'))
+            && is_string($nvr['id'])
+            && $nvr['id'] !== ''
+            && is_string($nvr['modelKey'])
+            && $nvr['modelKey'] !== ''
+            && ($nvr['name'] === null || is_string($nvr['name']));
+    }
+
+    private function is_valid_connected_device($device) {
+        return $this->has_fields($device, array('id', 'modelKey', 'state', 'name', 'mac'))
+            && is_string($device['id'])
+            && $device['id'] !== ''
+            && is_string($device['modelKey'])
+            && $device['modelKey'] !== ''
+            && is_string($device['mac'])
+            && $device['mac'] !== ''
+            && is_string($device['state'])
+            && in_array($device['state'], array('CONNECTED', 'CONNECTING', 'DISCONNECTED'), true)
+            && ($device['name'] === null || is_string($device['name']));
+    }
+
+    private function is_list($value) {
+        if (!is_array($value)) {
+            return false;
+        }
+        return count($value) === 0 || array_keys($value) === range(0, count($value) - 1);
+    }
+
+    private function device_name($device, $fallback) {
+        if (isset($device['name']) && is_string($device['name']) && trim($device['name']) !== '') {
+            return $device['name'];
+        }
+        return $fallback . ' ' . $device['id'];
     }
 }
